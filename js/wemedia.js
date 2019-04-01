@@ -1,0 +1,36 @@
+$(function(){
+	$(".tle_wemedia_id").each(function(){
+		var id=$(this).attr("id");
+		$("#"+id).change( function () {
+			$.post("admin.php?page=tle-wemedia&t=updateprice",{action:"updateprice",postid:$(this).attr("data-id"),price:$(this).val(),tle_wemedia_post_nonce:$(this).attr("data-nonce"),original:1},function(data){
+			});
+		});
+		$(this).keyup(function(){
+			/*先把非数字的都替换掉，除了数字和.*/
+			$(this).val($(this).val().replace(/[^\d.]/g,""));
+			/*保证只有出现一个.而没有多个.*/
+			$(this).val($(this).val().replace(/\.{2,}/g,"."));
+			/*必须保证第一个为数字而不是.*/
+			$(this).val($(this).val().replace(/^\./g,""));
+			/*保证.只出现一次，而不能出现两次以上*/
+			$(this).val($(this).val().replace(".","$#$").replace(/\./g,"").replace("$#$","."));
+			/*只能输入两个小数*/
+			$(this).val($(this).val().replace(/^(\-)*(\d+)\.(\d\d).*$/,"$1$2.$3"));
+		});
+	});
+	$.post("admin.php?page=tle-wemedia&t=updateversion",{version:$("#versionCode").attr("data-code")},function(data){
+		$("#versionCode").html(data);
+	});
+	$("#wemedia_cookietime").keyup(function(){
+		/*先把非数字的都替换掉，除了数字和.*/
+		$(this).val($(this).val().replace(/[^\d.]/g,""));
+		/*保证只有出现一个.而没有多个.*/
+		$(this).val($(this).val().replace(/\.{2,}/g,"."));
+		/*必须保证第一个为数字而不是.*/
+		$(this).val($(this).val().replace(/^\./g,""));
+		/*保证.只出现一次，而不能出现两次以上*/
+		$(this).val($(this).val().replace(".","$#$").replace(/\./g,"").replace("$#$","."));
+		/*只能输入两个小数*/
+		$(this).val($(this).val().replace(/^(\d+)$/,"$1"));
+	});
+});
