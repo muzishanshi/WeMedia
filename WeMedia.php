@@ -254,6 +254,13 @@ function tle_wemedia_options(){
 				<input type="submit" value="保存配置" />
 			</p>
 		</form>
+		<h2>使用方法</h2>
+		<p>
+			1、新建模板为“付费阅读同步回调”和“付费阅读异步回调”的页面；<br />
+			2、配置以下参数；<br />
+			3、在文章中点击右侧付费阅读框插入付费阅读标签 &lt;!--WeMedia start--> &lt;!--WeMedia end--> ，并在标签中间加入付费内容；<br />
+			4、在文章列表处修改每篇的付费内容的单价，即可进行付费操作。
+		</p>
 	</div>
 	<?php
 }
