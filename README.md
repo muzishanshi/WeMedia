@@ -1,6 +1,8 @@
 ### WeMediaForWordPress付费阅读插件
 ---
 
+<img src="https://ws3.sinaimg.cn/large/ecabade5ly1ftmeqo9d9pj20kk0583yj.jpg" />
+
 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本仅支持SPay微信支付，而且SPay支付偶尔会回调服务器时间过于慢，影响业务处理，后期会增加其他支付，请知悉。
 
 #### 使用方法：
