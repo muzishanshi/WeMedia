@@ -20,7 +20,7 @@
 
 网站：http://www.tongleer.com/
 
-Github：https://github.com/muzishanshi/WeMediaForWordpress
+Github：https://github.com/muzishanshi/WeMedia
 
 #### 更新记录：
 2019-04-01
