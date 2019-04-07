@@ -3,7 +3,10 @@
 
 <img src="https://ws3.sinaimg.cn/large/ecabade5ly1ftmeqo9d9pj20kk0583yj.jpg" />
 
-本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本仅支持SPay微信支付，而且SPay支付偶尔会回调服务器时间过于慢，影响业务处理，后期会增加其他支付，请知悉。
+本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本仅支持SPay和payjs微信支付。
+
+#### 遇到问题
+因cookie的关系，目前仅支持https，测试http不能保存cookie，但我的typecho版本的WeMedia插件可以保存，很是纳闷，未找到原因，如果你的http能保存能用的话，那就能用了，不过我这里测试时支持https，不支持http。
 
 #### 安装方法：
 第一步：下载本插件，放在 `wp-content/plugins/` 目录中（插件文件夹名必须为WeMedia）；
@@ -34,6 +37,10 @@
 Github：https://github.com/muzishanshi/WeMedia
 
 #### 更新记录：
+2019-04-07
+	
+	V1.0.2 新增payjs微信支付
+	
 2019-04-01
 	
 	V1.0.1 第一版本实现
