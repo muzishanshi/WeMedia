@@ -1,7 +1,7 @@
 <?php
 /*
-	template name: 付费阅读spay异步回调
-	description: SPay支付异步回调通知页面
+	template name: 付费阅读异步回调
+	description: 支付异步回调通知页面
 */
 define('PATH', dirname(__FILE__).'/');
 require_once(PATH . '../../../wp-config.php');  
