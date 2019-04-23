@@ -17,28 +17,40 @@ if($action=='paysubmit'){
 	
 	switch($wemedia_configs["wemedia_paytype"]){
 		case "spay":
-			$pdata['orderNumber']=date("YmdHis") . rand(100000, 999999);
-			$pdata['Money']=get_post_meta( $feecid, 'tle_wemedia_submit', TRUE);
-			$pdata['Notify_url']=$wemedia_configs["spay_wxpay_notify_url"];
-			$pdata['Return_url']=$wemedia_configs["spay_wxpay_return_url"];
-			$pdata['SPayId']=$wemedia_configs["spay_wxpay_id"];
-			
-			$ret=spay_wpay_pay($pdata,$wemedia_configs["spay_wxpay_key"],$feetype);
+			$time=time();
+			$orderNumber=date("YmdHis",$time) . rand(100000, 999999);
+			if($feetype=="wx"){
+				$pdata['orderNumber']=$orderNumber;
+				$pdata['Money']=get_post_meta( $feecid, 'tle_wemedia_submit', TRUE);
+				$pdata['Notify_url']=$wemedia_configs["spay_pay_notify_url"];
+				$pdata['Return_url']=$wemedia_configs["spay_pay_return_url"];
+				$pdata['SPayId']=$wemedia_configs["spay_wxpay_id"];
+				$ret=spay_pay_pay($pdata,$wemedia_configs["spay_wxpay_key"],$feetype);
+				$Money=$pdata['Money'];
+			}else if($feetype=="alipay"){
+				$data['total_fee'] = get_post_meta( $feecid, 'tle_wemedia_submit', TRUE);
+				$data['partner']= $wemedia_configs["spay_alipay_id"];
+				$data['notify_url']= $wemedia_configs["spay_pay_notify_url"];
+				$data['return_url']= $wemedia_configs["spay_pay_return_url"];
+				$data['out_trade_no']= $orderNumber;
+				$ret=spay_pay_pay($data,$wemedia_configs["spay_alipay_key"]);
+				$Money=$data['total_fee'];
+			}
 			$url=$ret['url'];
 			if($url!=''){
 				$data = array(
-					'feeid'   =>  $pdata['orderNumber'],
+					'feeid'   =>  $orderNumber,
 					'feecid'   =>  $feecid,
 					'feeuid'     =>  $feeuid,
-					'feeprice'=>$pdata['Money'],
+					'feeprice'=>$Money,
 					'feetype'     =>  $feetype,
 					'feestatus'=>0,
-					'feeinstime'=>date('Y-m-d H:i:s',time()),
+					'feeinstime'=>date('Y-m-d H:i:s',$time),
 					'feecookie'=>$feecookie
 				);
 				$result = $wpdb->insert($wpdb->prefix."wemedia_fee_item",$data);
 				if($result){
-					$json=json_encode(array("status"=>"ok","type"=>"spay","qrcode"=>$url));
+					$json=json_encode(array("status"=>"ok","type"=>"spay","channel"=>$feetype,"qrcode"=>$url));
 					echo $json;
 					exit;
 				}
@@ -74,7 +86,7 @@ if($action=='paysubmit'){
 				);
 				$result = $wpdb->insert($wpdb->prefix."wemedia_fee_item",$data);
 				if($result){
-					$json=json_encode(array("status"=>"ok","type"=>"payjs","qrcode"=>$rst["qrcode"]));
+					$json=json_encode(array("status"=>"ok","type"=>"payjs","channel"=>"wx","qrcode"=>$rst["qrcode"]));
 					echo $json;
 					exit;
 				}

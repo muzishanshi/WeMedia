@@ -18,14 +18,26 @@ switch($wemedia_configs["wemedia_paytype"]){
 		$feetype="";
 		if($wxhao){
 			$feetype="wx";
-		}
-		$is=spay_wpay_verify($id,$wemedia_configs["spay_wxpay_key"],$feetype);
-
-		if($is!==false){
-			$result=$wpdb->update($wpdb->prefix."wemedia_fee_item",array('feestatus'=>1),array("feeid"=>$is["orderNumber"]));
-			echo 'success';
+			$is=spay_pay_verify($wemedia_configs["spay_wxpay_key"],$id,$feetype);
+			if($is!==false){
+				$result=$wpdb->update($wpdb->prefix."wemedia_fee_item",array('feestatus'=>1),array("feeid"=>$is["orderNumber"]));
+				echo 'success';
+			}else{
+				echo 'fail';
+			}
 		}else{
-			echo 'fail';
+			$feetype="alipay";
+			if(spay_pay_verify($wemedia_configs["spay_alipay_key"])){
+				$ts = $_POST['trade_status'];    
+				if ($ts == 'TRADE_FINISHED' || $ts == 'TRADE_SUCCESS'){
+					$result=$wpdb->update($wpdb->prefix."wemedia_fee_item",array('feestatus'=>1),array("feeid"=>$_POST["out_trade_no"]));
+					echo 'success';    
+				}else{
+					echo 'fail';    
+				}
+			}else{
+				echo 'fail';    
+			}
 		}
 		break;
 	case "payjs":

@@ -2,17 +2,17 @@
 /*
 Plugin Name: WeMedia付费阅读
 Plugin URI: https://github.com/muzishanshi/WeMedia
-Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本仅支持SPay和payjs微信支付。支持https，但http可能会存在cookie保存上的问题。
-Version: 1.0.2
+Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持SPay支付宝、微信支付和payjs微信支付。支持https，但http可能会存在cookie保存上的问题。
+Version: 1.0.3
 Author: 二呆
 Author URI: https://www.tongleer.com/
 Note: 请勿修改或删除以上信息
 */
-define("TLE_WEMEDIA_VERSION",2);
+define("TLE_WEMEDIA_VERSION",3);
 if(isset($_GET['t'])){
 	/*设置参数*/
     if($_GET['t'] == 'configwemedia'){
-        update_option('tle_wemedia', array('wemedia_isdrop' => $_REQUEST['wemedia_isdrop'], 'wemedia_paytype' => $_REQUEST['wemedia_paytype'], 'wemedia_cookietime' => $_REQUEST['wemedia_cookietime'], 'spay_wxpay_id' => $_REQUEST['spay_wxpay_id'], 'spay_wxpay_key' => $_REQUEST['spay_wxpay_key'], 'spay_wxpay_notify_url' => $_REQUEST['spay_wxpay_notify_url'], 'spay_wxpay_return_url' => $_REQUEST['spay_wxpay_return_url'], 'payjs_wxpay_mchid' => $_REQUEST['payjs_wxpay_mchid'], 'payjs_wxpay_key' => $_REQUEST['payjs_wxpay_key'], 'payjs_wxpay_notify_url' => $_REQUEST['payjs_wxpay_notify_url']));
+        update_option('tle_wemedia', array('wemedia_isdrop' => $_REQUEST['wemedia_isdrop'], 'wemedia_paytype' => $_REQUEST['wemedia_paytype'], 'wemedia_cookietime' => $_REQUEST['wemedia_cookietime'], 'spay_wxpay_id' => $_REQUEST['spay_wxpay_id'], 'spay_wxpay_key' => $_REQUEST['spay_wxpay_key'], 'spay_alipay_id' => $_REQUEST['spay_alipay_id'], 'spay_alipay_key' => $_REQUEST['spay_alipay_key'], 'spay_pay_notify_url' => $_REQUEST['spay_pay_notify_url'], 'spay_pay_return_url' => $_REQUEST['spay_pay_return_url'], 'payjs_wxpay_mchid' => $_REQUEST['payjs_wxpay_mchid'], 'payjs_wxpay_key' => $_REQUEST['payjs_wxpay_key'], 'payjs_wxpay_notify_url' => $_REQUEST['payjs_wxpay_notify_url']));
     }
 	/*设置付费单价*/
 	if($_GET['t']=='updateprice'){
@@ -120,7 +120,7 @@ function tle_wemedia_add_link( $actions, $plugin_file ) {
     $plugin = plugin_basename(__FILE__);
   if ($plugin == $plugin_file) {
       $settings = array('settings' => '<a href="admin.php?page=tle-wemedia">' . __('Settings') . '</a>');
-      $site_link  = array('version'=>'<span id="versionCode" data-code="'.TLE_WEMEDIA_VERSION.'"></span><br />','support' => '<a href="https://www.tongleer.com" target="_blank">官网</a>','club' => '<a href="http://club.tongleer.com" target="_blank">论坛</a>');
+      $site_link  = array('version'=>'<span id="versionCode" data-code="'.TLE_WEMEDIA_VERSION.'"></span><br />','contact' => '<a href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=diamond0422@qq.com" target="_blank">联系</a>','support' => '<a href="https://www.tongleer.com" target="_blank">官网</a>','club' => '<a href="http://club.tongleer.com" target="_blank">论坛</a>');
       $actions  = array_merge($settings, $actions);
       $actions  = array_merge($site_link, $actions);
   }
@@ -144,18 +144,27 @@ function tle_wemedia_content($content){
 		}
 		$rowFeeItem = $wpdb->get_row( "SELECT * FROM `" . $wpdb->prefix . "wemedia_fee_item` where feecookie='".$TleWemediaPayCookie."' AND feestatus = 1 AND feecid = ".get_the_ID());
 		if(!$rowFeeItem){
+			if($wemedia_configs["wemedia_paytype"]=="spay"){
+				$wemedia_paytype='
+					<option value="wx">微信支付</option>
+					<option value="alipay">支付宝支付</option>
+					<!--
+					<option value="qqpay">QQ钱包支付</option>
+					<option value="bank_pc">网银支付</option>
+					-->
+				';
+			}else if($wemedia_configs["wemedia_paytype"]=="payjs"){
+				$wemedia_paytype='
+					<option value="wx">微信支付</option>
+				';
+			}
 			$hide_notice='
 				<div style="border:1px dashed #F60; padding:10px; margin:10px 0; line-height:200%; color:#F00; background-color:#FFF4FF; overflow:hidden; clear:both;">
 					<span style="font-size:18px;">此处内容已经被作者隐藏，请付费后刷新页面查看内容</span>
 					<form id="wemediaPayPost" method="post" style="margin:10px 0;" action="'.plugins_url().'/WeMedia/pay.php" target="_blank">
 						<span class="yzts" style="font-size:18px;float:left;">方式：</span>
 						<select id="feetype" name="feetype" style="border:none;float:left;width:160px; height:32px; line-height:30px; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;">
-							<!--
-							<option value="alipay">支付宝支付</option>
-							<option value="qqpay">QQ钱包支付</option>
-							<option value="bank_pc">网银支付</option>
-							-->
-							<option value="wx">微信支付</option>
+							'.$wemedia_paytype.'
 						</select>
 						<div style="clear:left;"></div>
 						<span class="yzts" style="font-size:18px;float:left;">价格：</span>
@@ -198,7 +207,12 @@ function tle_wemedia_wp_footer(){
 						layer.close(ii);
 						if(data.status=="ok"){
 							if(data.type=="spay"){
-								str='<center><div>支持微信付款</div><div><img src="https://www.tongleer.com/api/web/?action=qrcode&url='+data.qrcode+'" width="200" /></div></center>';
+								if(data.channel=="wx"){
+									str='<center><div>支持微信付款</div><div><img src="https://www.tongleer.com/api/web/?action=qrcode&url='+data.qrcode+'" width="200" /></div><div><a href="'+data.qrcode+'" target="_blank">跳转支付链接</a></div></center>';
+								}else if(data.channel=="alipay"){
+									str='<center><div>支持支付宝付款</div><div><a href="'+data.qrcode+'" target="_blank">跳转支付链接</a></div></center>';
+								}
+								
 							}else if(data.type=="payjs"){
 								str='<center><div>支持微信付款</div><div><img src="'+data.qrcode+'" width="200" /></div></center>';
 							}
@@ -279,29 +293,37 @@ function tle_wemedia_options(){
 			</p>
 			<p>
 				支付方式(配置二选一)：
-				<input type="radio" name="wemedia_paytype" value="spay" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="spay"?"checked":""):"checked";?> />spay微信支付
+				<input type="radio" name="wemedia_paytype" value="spay" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="spay"?"checked":""):"checked";?> />spay微信+支付宝支付
 				<input type="radio" name="wemedia_paytype" value="payjs" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="payjs"?"checked":""):"";?> />payjs微信支付
 			</p>
 			<p>
 				<input type="number" id="wemedia_cookietime" name="wemedia_cookietime" placeholder="免登录Cookie时间(天)" value="<?=$wemedia_configs['wemedia_cookietime']!=""?$wemedia_configs['wemedia_cookietime']:1;?>" />
 				指定使用免登录付费后几天内可以查看隐藏内容，默认为1天，不会记录到买入订单中。
 			</p>
-			<p><b>spay微信支付</b></p>
+			<p><b>spay微信+支付宝支付</b></p>
 			<p>
 				<input type="text" name="spay_wxpay_id" placeholder="SPay微信支付合作ID" value="<?=$wemedia_configs['spay_wxpay_id'];?>" />
 				SPay网站（主：http://spay.swapteam.cn/；副：http://spay.8889838.com）注册授权微信支付的合作身份者id。
 			</p>
 			<p>
 				<input type="text" name="spay_wxpay_key" placeholder="SPay微信支付安全码" value="<?=$wemedia_configs['spay_wxpay_key'];?>" />
-				SPay网站（主：http://spay.swapteam.cn/；副：http://spay.8889838.com）注册授权微信支付的合作身份者id。
+				SPay网站（主：http://spay.swapteam.cn/；副：http://spay.8889838.com）注册授权微信支付的安全检验码key。
 			</p>
 			<p>
-				<input type="text" name="spay_wxpay_notify_url" placeholder="SPay异步回调接口" value="<?=$wemedia_configs['spay_wxpay_notify_url'];?>" />
-				支付完成后异步回调的接口地址，可自建模板为（付费阅读spay异步回调）的页面。
+				<input type="text" name="spay_alipay_id" placeholder="SPay支付宝支付合作ID" value="<?=$wemedia_configs['spay_alipay_id'];?>" />
+				SPay网站（主：http://spay.swapteam.cn/；副：http://spay.8889838.com）注册授权支付宝支付的合作身份者id。
 			</p>
 			<p>
-				<input type="text" name="spay_wxpay_return_url" placeholder="SPay同步回调接口" value="<?=$wemedia_configs['spay_wxpay_return_url'];?>" />
-				支付完成后同步回调的接口地址，可自建模板为（付费阅读spay同步回调）的页面。
+				<input type="text" name="spay_alipay_key" placeholder="SPay支付宝支付安全码" value="<?=$wemedia_configs['spay_alipay_key'];?>" />
+				SPay网站（主：http://spay.swapteam.cn/；副：http://spay.8889838.com）注册授权支付宝支付的安全检验码key。
+			</p>
+			<p>
+				<input type="text" name="spay_pay_notify_url" placeholder="SPay异步回调接口" value="<?=$wemedia_configs['spay_pay_notify_url'];?>" />
+				支付完成后异步回调的接口地址，可自建模板为（付费阅读异步回调）的页面。
+			</p>
+			<p>
+				<input type="text" name="spay_pay_return_url" placeholder="SPay同步回调接口" value="<?=$wemedia_configs['spay_pay_return_url'];?>" />
+				支付完成后同步回调的接口地址，可自建模板为（付费阅读同步回调）的页面。
 			</p>
 			<p><b>payjs微信支付</b></p>
 			<p>
@@ -314,7 +336,7 @@ function tle_wemedia_options(){
 			</p>
 			<p>
 				<input type="text" name="payjs_wxpay_notify_url" placeholder="payjs异步回调接口" value="<?=$wemedia_configs['payjs_wxpay_notify_url'];?>" />
-				支付完成后异步回调的接口地址，可自建模板为（付费阅读spay异步回调）的页面。
+				支付完成后异步回调的接口地址，可自建模板为（付费阅读异步回调）的页面。
 			</p>
 			<p>
 				<input type="hidden" name="t" value="configwemedia" />
@@ -322,6 +344,11 @@ function tle_wemedia_options(){
 				<input type="submit" value="保存配置" />
 			</p>
 		</form>
+		<h2><font color="red">特别注意</font></h2>
+		<p>
+			1、选择spay支付时，支付宝最低单价为0.8元；<br />
+			2、因cookie的关系，插件测试时支持本地和服务器https环境，服务器http协议没有成功保存cookie，不知是何原因，并且typecho付费阅读插件都支持，很纳闷，如果你安装后可以用那就是能用，也可能跟wordpress本身的配置有关禁用了cookie，目前暂无解决，敬请谅解；
+		</p>
 		<h2>使用方法</h2>
 		<p>
 			1、新建模板为“付费阅读同步回调”和“付费阅读异步回调”的页面；<br />
