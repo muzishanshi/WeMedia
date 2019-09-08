@@ -3,16 +3,16 @@
 Plugin Name: WeMedia付费阅读
 Plugin URI: https://github.com/muzishanshi/WeMedia
 Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持SPay支付宝、微信支付和payjs微信支付。
-Version: 1.0.3
+Version: 1.0.4
 Author: 二呆
 Author URI: https://www.tongleer.com/
 Note: 请勿修改或删除以上信息
 */
-define("TLE_WEMEDIA_VERSION",3);
+define("TLE_WEMEDIA_VERSION",4);
 if(isset($_GET['t'])){
 	/*设置参数*/
     if($_GET['t'] == 'configwemedia'){
-        update_option('tle_wemedia', array('wemedia_isdrop' => $_REQUEST['wemedia_isdrop'], 'wemedia_paytype' => $_REQUEST['wemedia_paytype'], 'wemedia_cookietime' => $_REQUEST['wemedia_cookietime'], 'spay_wxpay_id' => $_REQUEST['spay_wxpay_id'], 'spay_wxpay_key' => $_REQUEST['spay_wxpay_key'], 'spay_alipay_id' => $_REQUEST['spay_alipay_id'], 'spay_alipay_key' => $_REQUEST['spay_alipay_key'], 'spay_pay_notify_url' => $_REQUEST['spay_pay_notify_url'], 'spay_pay_return_url' => $_REQUEST['spay_pay_return_url'], 'payjs_wxpay_mchid' => $_REQUEST['payjs_wxpay_mchid'], 'payjs_wxpay_key' => $_REQUEST['payjs_wxpay_key'], 'payjs_wxpay_notify_url' => $_REQUEST['payjs_wxpay_notify_url']));
+        update_option('tle_wemedia', array('wemedia_isdrop' => $_REQUEST['wemedia_isdrop'], 'wemedia_paytype' => $_REQUEST['wemedia_paytype'], 'wemedia_payjstype' => $_REQUEST['wemedia_payjstype'], 'wemedia_cookietime' => $_REQUEST['wemedia_cookietime'], 'spay_wxpay_id' => $_REQUEST['spay_wxpay_id'], 'spay_wxpay_key' => $_REQUEST['spay_wxpay_key'], 'spay_alipay_id' => $_REQUEST['spay_alipay_id'], 'spay_alipay_key' => $_REQUEST['spay_alipay_key'], 'spay_pay_notify_url' => $_REQUEST['spay_pay_notify_url'], 'spay_pay_return_url' => $_REQUEST['spay_pay_return_url'], 'payjs_wxpay_mchid' => $_REQUEST['payjs_wxpay_mchid'], 'payjs_wxpay_key' => $_REQUEST['payjs_wxpay_key'], 'payjs_wxpay_notify_url' => $_REQUEST['payjs_wxpay_notify_url']));
     }
 	/*设置付费单价*/
 	if($_GET['t']=='updateprice'){
@@ -224,8 +224,10 @@ function tle_wemedia_wp_footer(){
 									str='<center><div>支持支付宝付款</div><div><a href="'+data.qrcode+'" target="_blank">跳转支付链接</a></div></center>';
 								}
 								
-							}else if(data.type=="payjs"){
+							}else if(data.type=="payjsnative"){
 								str='<center><div>支持微信付款</div><div><img src="'+data.qrcode+'" width="200" /></div></center>';
+							}else if(data.type=="payjscashier"){
+								open("<?=plugins_url();?>/WeMedia/pay.php?feetype="+$("#feetype").val()+"&feecid="+$("#feecid").val()+"&feeuid="+$("#feeuid").val()+"&feecookie="+$("#feecookie").val());
 							}
 						}else{
 							str="<center><div>请求支付过程出了一点小问题，稍后重试一次吧！</div></center>";
@@ -303,9 +305,14 @@ function tle_wemedia_options(){
 				<input type="radio" name="wemedia_isdrop" value="y" <?=isset($wemedia_configs['wemedia_isdrop'])?($wemedia_configs['wemedia_isdrop']=="y"?"checked":""):"";?> />停用插件删除订单数据表及回调模板
 			</p>
 			<p>
-				支付方式(配置二选一)：
+				支付渠道(配置二选一)：
 				<input type="radio" name="wemedia_paytype" value="spay" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="spay"?"checked":""):"checked";?> />spay微信+支付宝支付
 				<input type="radio" name="wemedia_paytype" value="payjs" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="payjs"?"checked":""):"";?> />payjs微信支付
+			</p>
+			<p>
+				payjs支付方式(配置二选一)：
+				<input type="radio" name="wemedia_payjstype" value="native" <?=isset($wemedia_configs['wemedia_payjstype'])?($wemedia_configs['wemedia_payjstype']=="native"?"checked":""):"checked";?> />扫码支付
+				<input type="radio" name="wemedia_payjstype" value="cashier" <?=isset($wemedia_configs['wemedia_payjstype'])?($wemedia_configs['wemedia_payjstype']=="cashier"?"checked":""):"";?> />收银台支付
 			</p>
 			<p>
 				<input type="number" id="wemedia_cookietime" name="wemedia_cookietime" placeholder="免登录Cookie时间(天)" value="<?=$wemedia_configs['wemedia_cookietime']!=""?$wemedia_configs['wemedia_cookietime']:1;?>" />

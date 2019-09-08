@@ -36,13 +36,11 @@
 Github：https://github.com/muzishanshi/WeMedia
 
 #### 更新记录：
-<!--
 2019-09-08 V1.0.4
 	
 	1、新增手机端长按二维码支付
 	2、修复了因cookie保存位置不正确导致的http网站无法保存cookie不显示回调的bug。
 	
--->
 2019-04-23
 	
 	V1.0.3 除spay微信支付外，新增spay支付宝支付
