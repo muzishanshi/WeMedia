@@ -2,7 +2,7 @@
 /*
 Plugin Name: WeMedia付费阅读
 Plugin URI: https://github.com/muzishanshi/WeMedia
-Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持SPay支付宝、微信支付和payjs微信支付。支持https，但http可能会存在cookie保存上的问题。
+Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持SPay支付宝、微信支付和payjs微信支付。
 Version: 1.0.3
 Author: 二呆
 Author URI: https://www.tongleer.com/
@@ -122,12 +122,22 @@ function tle_wemedia_add_link( $actions, $plugin_file ) {
     $plugin = plugin_basename(__FILE__);
   if ($plugin == $plugin_file) {
       $settings = array('settings' => '<a href="admin.php?page=tle-wemedia">' . __('Settings') . '</a>');
-      $site_link  = array('version'=>'<span id="versionCode" data-code="'.TLE_WEMEDIA_VERSION.'"></span><br />','contact' => '<a href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=diamond0422@qq.com" target="_blank">联系</a>','support' => '<a href="https://www.tongleer.com" target="_blank">官网</a>','club' => '<a href="http://club.tongleer.com" target="_blank">论坛</a>');
+      $site_link  = array('version'=>'<span id="versionCode" data-code="'.TLE_WEMEDIA_VERSION.'"></span>','contact' => '<a href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=diamond0422@qq.com" target="_blank">反馈</a>','support' => '<a href="https://www.tongleer.com/api/web/pay.png" target="_blank">打赏</a>','club' => '<a href="http://club.tongleer.com" target="_blank">论坛</a>');
       $actions  = array_merge($settings, $actions);
       $actions  = array_merge($site_link, $actions);
   }
   return $actions;
 }
+
+function tle_wemedia_setcookie() {
+    $wemedia_configs = get_settings('tle_wemedia');
+	if(!isset($_COOKIE["TleWemediaPayCookie"])){
+		$cookietime=$wemedia_configs["wemedia_cookietime"]==""?1:$wemedia_configs["wemedia_cookietime"];
+		$randomCode=randomCode(10,1)[1];
+		setcookie("TleWemediaPayCookie",$randomCode, time()+3600*24*$cookietime, COOKIEPATH, COOKIE_DOMAIN, false);
+	}
+}
+add_action( 'init', 'tle_wemedia_setcookie');
 
 /*前台显示付费*/
 add_filter('the_content', 'tle_wemedia_content');
@@ -139,7 +149,6 @@ function tle_wemedia_content($content){
 		if(!isset($_COOKIE["TleWemediaPayCookie"])){
 			$cookietime=$wemedia_configs["wemedia_cookietime"]==""?1:$wemedia_configs["wemedia_cookietime"];
 			$randomCode=randomCode(10,1)[1];
-			setcookie("TleWemediaPayCookie",$randomCode, time()+3600*24*$cookietime);
 			$TleWemediaPayCookie=$randomCode;
 		}else{
 			$TleWemediaPayCookie=$_COOKIE["TleWemediaPayCookie"];
@@ -349,7 +358,7 @@ function tle_wemedia_options(){
 		<h2><font color="red">特别注意</font></h2>
 		<p>
 			1、选择spay支付时，支付宝最低单价为0.8元；<br />
-			2、因cookie的关系，插件测试时支持本地和服务器https环境，服务器http协议没有成功保存cookie，不知是何原因，并且typecho付费阅读插件都支持，很纳闷，如果你安装后可以用那就是能用，也可能跟wordpress本身的配置有关禁用了cookie，目前暂无解决，敬请谅解；
+			2、之前的cookie保存问题解决之后，在更新时突然发现未登录时不显示付款框的css样式，但用ver_dump输出可以打印出css，而且自己网站测试没问题，又迷糊了，暂时这样吧，不过可能你装上插件不会有此问题，如果有，只能保持沉默了……；
 		</p>
 		<h2>使用方法</h2>
 		<p>
