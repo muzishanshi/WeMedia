@@ -3,12 +3,12 @@
 Plugin Name: WeMedia付费阅读
 Plugin URI: https://github.com/muzishanshi/WeMedia
 Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持SPay支付宝、微信支付和payjs微信支付。
-Version: 1.0.4
+Version: 1.0.5
 Author: 二呆
 Author URI: https://www.tongleer.com/
 Note: 请勿修改或删除以上信息
 */
-define("TLE_WEMEDIA_VERSION",4);
+define("TLE_WEMEDIA_VERSION",5);
 if(isset($_GET['t'])){
 	/*设置参数*/
     if($_GET['t'] == 'configwemedia'){
@@ -201,8 +201,10 @@ function tle_wemedia_wp_footer(){
 	$wemedia_price=get_post_meta( get_the_ID(), 'tle_wemedia_submit', TRUE);
 	?>
 	<script src="https://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/layer/2.3/layer.js"></script>
+	<script src="https://www.tongleer.com/cdn/layui/layui.js"></script>
 	<script>
+	layui.use('layer', function(){
+		var $ = layui.jquery, layer = layui.layer;
 		$("#wemediaPayPost").submit(function(){
 			var str = "确认要花费￥<?=$wemedia_price;?>购买吗？";
 			layer.confirm(str, {
@@ -247,6 +249,7 @@ function tle_wemedia_wp_footer(){
 			});
 			return false;
 		});
+	});
 	</script>
 	<?php
 }
