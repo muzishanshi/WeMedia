@@ -93,9 +93,10 @@ function tle_wemedia_admin_init() {
 	if( current_user_can( 'manage_options' ) ) {
 		add_filter('manage_post_posts_columns', 'tle_wemedia_add_post_columns');
 		add_action('manage_posts_custom_column', 'tle_wemedia_render_post_columns', 10, 2);
+		
+		add_action( 'admin_enqueue_scripts', 'tle_wemedia_scripts' );
+		add_filter( 'plugin_action_links', 'tle_wemedia_add_link', 10, 2 );
 	}
-	add_action( 'admin_enqueue_scripts', 'tle_wemedia_scripts' );
-	add_filter( 'plugin_action_links', 'tle_wemedia_add_link', 10, 2 );
 }
 function tle_wemedia_add_post_columns($columns) {
     $columns['wemedia_price_name'] = '设置付费单价';
@@ -277,7 +278,9 @@ function randomCode($codeLength, $codeCount){
 /*插入付费阅读标签*/
 add_action('add_meta_boxes', 'tle_wemedia_box');
 function tle_wemedia_box(){
-    add_meta_box('tle_wemedia_div', __('付费阅读'), 'tle_wemedia_html', 'post', 'side');
+	if( current_user_can( 'manage_options' ) ) {
+		add_meta_box('tle_wemedia_div', __('付费阅读'), 'tle_wemedia_html', 'post', 'side');
+	}
 }
 function tle_wemedia_html(){
 	echo '<script>var tle_wemedia_url="' . admin_url('options-general.php?page=tle-wemedia&t=insert') . '";</script>';
