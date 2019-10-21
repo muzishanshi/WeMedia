@@ -12,7 +12,7 @@ define("TLE_WEMEDIA_VERSION",5);
 if(isset($_GET['t'])){
 	/*设置参数*/
     if($_GET['t'] == 'configwemedia'){
-        update_option('tle_wemedia', array('wemedia_isdrop' => $_REQUEST['wemedia_isdrop'], 'wemedia_paytype' => $_REQUEST['wemedia_paytype'], 'wemedia_payjstype' => $_REQUEST['wemedia_payjstype'], 'wemedia_cookietime' => $_REQUEST['wemedia_cookietime'], 'spay_wxpay_id' => $_REQUEST['spay_wxpay_id'], 'spay_wxpay_key' => $_REQUEST['spay_wxpay_key'], 'spay_alipay_id' => $_REQUEST['spay_alipay_id'], 'spay_alipay_key' => $_REQUEST['spay_alipay_key'], 'spay_pay_notify_url' => $_REQUEST['spay_pay_notify_url'], 'spay_pay_return_url' => $_REQUEST['spay_pay_return_url'], 'payjs_wxpay_mchid' => $_REQUEST['payjs_wxpay_mchid'], 'payjs_wxpay_key' => $_REQUEST['payjs_wxpay_key'], 'payjs_wxpay_notify_url' => $_REQUEST['payjs_wxpay_notify_url']));
+        update_option('tle_wemedia', array('isEnableJQuery' => $_REQUEST['isEnableJQuery'], 'wemedia_isdrop' => $_REQUEST['wemedia_isdrop'], 'wemedia_paytype' => $_REQUEST['wemedia_paytype'], 'wemedia_payjstype' => $_REQUEST['wemedia_payjstype'], 'wemedia_cookietime' => $_REQUEST['wemedia_cookietime'], 'spay_wxpay_id' => $_REQUEST['spay_wxpay_id'], 'spay_wxpay_key' => $_REQUEST['spay_wxpay_key'], 'spay_alipay_id' => $_REQUEST['spay_alipay_id'], 'spay_alipay_key' => $_REQUEST['spay_alipay_key'], 'spay_pay_notify_url' => $_REQUEST['spay_pay_notify_url'], 'spay_pay_return_url' => $_REQUEST['spay_pay_return_url'], 'payjs_wxpay_mchid' => $_REQUEST['payjs_wxpay_mchid'], 'payjs_wxpay_key' => $_REQUEST['payjs_wxpay_key'], 'payjs_wxpay_notify_url' => $_REQUEST['payjs_wxpay_notify_url']));
     }
 	/*设置付费单价*/
 	if($_GET['t']=='updateprice'){
@@ -112,10 +112,53 @@ function tle_wemedia_render_post_columns($column_name, $id) {
     }
 }
 function tle_wemedia_scripts(){
+	/*
 	wp_register_script( 'tle_wemedia_jquery', 'https://libs.baidu.com/jquery/1.11.1/jquery.min.js');  
 	wp_enqueue_script( 'tle_wemedia_jquery' );
 	wp_register_script( 'tle_wemedia_js', plugins_url('js/wemedia.js',__FILE__) );  
 	wp_enqueue_script( 'tle_wemedia_js' );
+	*/
+	?>
+	<script src="https://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
+	<script>
+	$(function(){
+		$(".tle_wemedia_id").each(function(){
+			var id=$(this).attr("id");
+			$("#"+id).change( function () {
+				$.post("admin.php?page=tle-wemedia&t=updateprice",{action:"updateprice",postid:$(this).attr("data-id"),price:$(this).val(),tle_wemedia_post_nonce:$(this).attr("data-nonce"),original:1},function(data){
+				});
+			});
+			$(this).keyup(function(){
+				/*先把非数字的都替换掉，除了数字和.*/
+				$(this).val($(this).val().replace(/[^\d.]/g,""));
+				/*保证只有出现一个.而没有多个.*/
+				$(this).val($(this).val().replace(/\.{2,}/g,"."));
+				/*必须保证第一个为数字而不是.*/
+				$(this).val($(this).val().replace(/^\./g,""));
+				/*保证.只出现一次，而不能出现两次以上*/
+				$(this).val($(this).val().replace(".","$#$").replace(/\./g,"").replace("$#$","."));
+				/*只能输入两个小数*/
+				$(this).val($(this).val().replace(/^(\-)*(\d+)\.(\d\d).*$/,"$1$2.$3"));
+			});
+		});
+		$.post("admin.php?page=tle-wemedia&t=updateversion",{version:$("#versionCode").attr("data-code")},function(data){
+			$("#versionCode").html(data);
+		});
+		$("#wemedia_cookietime").keyup(function(){
+			/*先把非数字的都替换掉，除了数字和.*/
+			$(this).val($(this).val().replace(/[^\d.]/g,""));
+			/*保证只有出现一个.而没有多个.*/
+			$(this).val($(this).val().replace(/\.{2,}/g,"."));
+			/*必须保证第一个为数字而不是.*/
+			$(this).val($(this).val().replace(/^\./g,""));
+			/*保证.只出现一次，而不能出现两次以上*/
+			$(this).val($(this).val().replace(".","$#$").replace(/\./g,"").replace("$#$","."));
+			/*只能输入两个小数*/
+			$(this).val($(this).val().replace(/^(\d+)$/,"$1"));
+		});
+	});
+	</script>
+	<?php
 }
 function tle_wemedia_add_link( $actions, $plugin_file ) {
   static $plugin;
@@ -199,9 +242,12 @@ function tle_wemedia_content($content){
 }
 add_action('wp_footer', 'tle_wemedia_wp_footer');
 function tle_wemedia_wp_footer(){
+	$wemedia_configs = get_settings('tle_wemedia');
 	$wemedia_price=get_post_meta( get_the_ID(), 'tle_wemedia_submit', TRUE);
 	?>
+	<?php if(@$wemedia_configs['isEnableJQuery']=="y"){?>
 	<script src="https://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
+	<?php }?>
 	<script src="https://www.tongleer.com/cdn/layui/layui.js"></script>
 	<script>
 	layui.use('layer', function(){
@@ -309,6 +355,11 @@ function tle_wemedia_options(){
 				关于卸载：
 				<input type="radio" name="wemedia_isdrop" value="n" <?=isset($wemedia_configs['wemedia_isdrop'])?($wemedia_configs['wemedia_isdrop']=="n"?"checked":""):"checked";?> />停用插件保留订单数据表及回调模板
 				<input type="radio" name="wemedia_isdrop" value="y" <?=isset($wemedia_configs['wemedia_isdrop'])?($wemedia_configs['wemedia_isdrop']=="y"?"checked":""):"";?> />停用插件删除订单数据表及回调模板
+			</p>
+			<p>
+				前台是否加载jquery：
+				<input type="radio" name="isEnableJQuery" value="n" <?=isset($wemedia_configs['isEnableJQuery'])?($wemedia_configs['isEnableJQuery']=="n"?"checked":""):"";?> />否
+				<input type="radio" name="isEnableJQuery" value="y" <?=isset($wemedia_configs['isEnableJQuery'])?($wemedia_configs['isEnableJQuery']!="n"?"checked":""):"checked";?> />是
 			</p>
 			<p>
 				支付渠道(配置二选一)：
