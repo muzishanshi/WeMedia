@@ -248,10 +248,8 @@ function tle_wemedia_wp_footer(){
 	<?php if(@$wemedia_configs['isEnableJQuery']=="y"){?>
 	<script src="https://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
 	<?php }?>
-	<script src="https://www.tongleer.com/cdn/layui/layui.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/layer/2.3/layer.js"></script>
 	<script>
-	layui.use('layer', function(){
-		var $ = layui.jquery, layer = layui.layer;
 		$("#wemediaPayPost").submit(function(){
 			var str = "确认要花费￥<?=$wemedia_price;?>购买吗？";
 			layer.confirm(str, {
@@ -296,7 +294,6 @@ function tle_wemedia_wp_footer(){
 			});
 			return false;
 		});
-	});
 	</script>
 	<?php
 }
