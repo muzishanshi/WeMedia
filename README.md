@@ -38,7 +38,7 @@ Github：https://github.com/muzishanshi/WeMedia
 #### 更新记录：
 2019-10-02 V1.0.5
 
-	修复因加载cloudflare的layer.js失效导致的bug。
+	修复因加载cloudflare的layer.js失效导致的bug（因已恢复就还在沿用layer.js）。
 
 2019-09-08 V1.0.4
 	
