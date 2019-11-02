@@ -2,17 +2,17 @@
 /*
 Plugin Name: WeMedia付费阅读
 Plugin URI: https://github.com/muzishanshi/WeMedia
-Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持SPay支付宝、微信支付和payjs微信支付。
-Version: 1.0.5
+Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持SPay支付宝、QQ、微信支付和payjs微信支付。
+Version: 1.0.6
 Author: 二呆
 Author URI: https://www.tongleer.com/
 Note: 请勿修改或删除以上信息
 */
-define("TLE_WEMEDIA_VERSION",5);
+define("TLE_WEMEDIA_VERSION",6);
 if(isset($_GET['t'])){
 	/*设置参数*/
     if($_GET['t'] == 'configwemedia'){
-        update_option('tle_wemedia', array('isEnableJQuery' => $_REQUEST['isEnableJQuery'], 'wemedia_isdrop' => $_REQUEST['wemedia_isdrop'], 'wemedia_paytype' => $_REQUEST['wemedia_paytype'], 'wemedia_payjstype' => $_REQUEST['wemedia_payjstype'], 'wemedia_cookietime' => $_REQUEST['wemedia_cookietime'], 'spay_wxpay_id' => $_REQUEST['spay_wxpay_id'], 'spay_wxpay_key' => $_REQUEST['spay_wxpay_key'], 'spay_alipay_id' => $_REQUEST['spay_alipay_id'], 'spay_alipay_key' => $_REQUEST['spay_alipay_key'], 'spay_pay_notify_url' => $_REQUEST['spay_pay_notify_url'], 'spay_pay_return_url' => $_REQUEST['spay_pay_return_url'], 'payjs_wxpay_mchid' => $_REQUEST['payjs_wxpay_mchid'], 'payjs_wxpay_key' => $_REQUEST['payjs_wxpay_key'], 'payjs_wxpay_notify_url' => $_REQUEST['payjs_wxpay_notify_url']));
+        update_option('tle_wemedia', array('isEnableJQuery' => $_REQUEST['isEnableJQuery'], 'wemedia_isdrop' => $_REQUEST['wemedia_isdrop'], 'wemedia_paytype' => $_REQUEST['wemedia_paytype'], 'wemedia_cookietime' => $_REQUEST['wemedia_cookietime'], 'spay_wxpay_id' => $_REQUEST['spay_wxpay_id'], 'spay_wxpay_key' => $_REQUEST['spay_wxpay_key'], 'spay_alipay_id' => $_REQUEST['spay_alipay_id'], 'spay_alipay_key' => $_REQUEST['spay_alipay_key'], 'spay_pay_notify_url' => $_REQUEST['spay_pay_notify_url'], 'spay_pay_return_url' => $_REQUEST['spay_pay_return_url'], 'payjs_wxpay_mchid' => $_REQUEST['payjs_wxpay_mchid'], 'payjs_wxpay_key' => $_REQUEST['payjs_wxpay_key'], 'payjs_wxpay_notify_url' => $_REQUEST['payjs_wxpay_notify_url'], 'payjs_wxpay_return_url' => $_REQUEST['payjs_wxpay_return_url']));
     }
 	/*设置付费单价*/
 	if($_GET['t']=='updateprice'){
@@ -227,6 +227,7 @@ function tle_wemedia_content($content){
 						<input id="verifybtn" style="border:none;float:left;width:80px; height:32px; line-height:32px; padding:0 5px; background-color:#F60; text-align:center; border:none; cursor:pointer; color:#FFF;-moz-border-radius: 0px; font-size:14px;  -webkit-border-radius: 0px;  border-radius:0px;" name="" type="submit" value="付款" />
 						<input type="hidden" name="action" value="paysubmit" />
 						<input type="hidden" id="feecid" name="feecid" value="'.urlencode(get_the_ID()).'" />
+						<input type="hidden" id="feepermalink" name="feepermalink" value="'.WeMediaCurPageURL().'" />
 						<input type="hidden" id="feecookie" name="feecookie" value="'.$TleWemediaPayCookie.'" />
 					</form>
 					<div style="clear:left;"></div>
@@ -256,10 +257,14 @@ function tle_wemedia_wp_footer(){
 				btn: ["付款","算了"]
 			}, function(){
 				var ii = layer.load(2, {shade:[0.1,"#fff"]});
+				var wemedia_payjstype="native";
+				if(isWemediaWeiXin()){
+					wemedia_payjstype="cashier";
+				}
 				$.ajax({
 					type : "POST",
 					url : "<?=plugins_url();?>/WeMedia/pay.php",
-					data : {"action":"paysubmit","feetype":$("#feetype").val(),"feecid":$("#feecid").val(),"feecookie":$("#feecookie").val()},
+					data : {"action":"paysubmit","wemedia_payjstype":wemedia_payjstype,"feepermalink":$("#feepermalink").val(),"feetype":$("#feetype").val(),"feecid":$("#feecid").val(),"feecookie":$("#feecookie").val()},
 					dataType : "json",
 					success : function(data) {
 						layer.close(ii);
@@ -271,10 +276,11 @@ function tle_wemedia_wp_footer(){
 									str='<center><div>支持支付宝付款</div><div><a href="'+data.qrcode+'" target="_blank">跳转支付链接</a></div></center>';
 								}
 								
-							}else if(data.type=="payjsnative"){
+							}else if(data.type=="native"){
 								str='<center><div>支持微信付款</div><div><img src="'+data.qrcode+'" width="200" /></div></center>';
-							}else if(data.type=="payjscashier"){
-								open("<?=plugins_url();?>/WeMedia/pay.php?feetype="+$("#feetype").val()+"&feecid="+$("#feecid").val()+"&feeuid="+$("#feeuid").val()+"&feecookie="+$("#feecookie").val());
+							}else if(data.type=="cashier"){
+								open("<?=plugins_url();?>/WeMedia/pay.php?wemedia_payjstype="+wemedia_payjstype+"&feepermalink="+$("#feepermalink").val()+"&feetype="+$("#feetype").val()+"&feecid="+$("#feecid").val()+"&feeuid="+$("#feeuid").val()+"&feecookie="+$("#feecookie").val());
+								return false;
 							}
 						}else{
 							str="<center><div>请求支付过程出了一点小问题，稍后重试一次吧！</div></center>";
@@ -294,6 +300,14 @@ function tle_wemedia_wp_footer(){
 			});
 			return false;
 		});
+		function isWemediaWeiXin(){
+			var ua = window.navigator.userAgent.toLowerCase();
+			if(ua.match(/MicroMessenger/i) == "micromessenger"){
+				return true;
+			}else{
+				return false;
+			}
+		}
 	</script>
 	<?php
 }
@@ -364,11 +378,6 @@ function tle_wemedia_options(){
 				<input type="radio" name="wemedia_paytype" value="payjs" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="payjs"?"checked":""):"";?> />payjs微信支付
 			</p>
 			<p>
-				payjs支付方式(配置二选一)：
-				<input type="radio" name="wemedia_payjstype" value="native" <?=isset($wemedia_configs['wemedia_payjstype'])?($wemedia_configs['wemedia_payjstype']=="native"?"checked":""):"checked";?> />扫码支付
-				<input type="radio" name="wemedia_payjstype" value="cashier" <?=isset($wemedia_configs['wemedia_payjstype'])?($wemedia_configs['wemedia_payjstype']=="cashier"?"checked":""):"";?> />收银台支付
-			</p>
-			<p>
 				<input type="number" id="wemedia_cookietime" name="wemedia_cookietime" placeholder="免登录Cookie时间(天)" value="<?=$wemedia_configs['wemedia_cookietime']!=""?$wemedia_configs['wemedia_cookietime']:1;?>" />
 				指定使用免登录付费后几天内可以查看隐藏内容，默认为1天，不会记录到买入订单中。
 			</p>
@@ -407,8 +416,12 @@ function tle_wemedia_options(){
 				在<a href="https://payjs.cn/" target="_blank">payjs官网</a>注册的通信密钥。
 			</p>
 			<p>
-				<input type="text" name="payjs_wxpay_notify_url" placeholder="payjs异步回调接口" value="<?=$wemedia_configs['payjs_wxpay_notify_url'];?>" />
-				支付完成后异步回调的接口地址，可自建模板为（付费阅读异步回调）的页面。
+				<input type="text" name="payjs_wxpay_notify_url" placeholder="payjs异步回调接口" value="<?php echo plugin_dir_url(__FILE__);?>wemedia_notify_url.php" readOnly />
+				支付完成后异步回调的接口地址。
+			</p>
+			<p>
+				<input type="text" name="payjs_wxpay_return_url" placeholder="payjs同步回调接口" value="<?php echo plugin_dir_url(__FILE__);?>wemedia_return_url.php" readOnly />
+				支付完成后同步回调的接口地址。
 			</p>
 			<p>
 				<input type="hidden" name="t" value="configwemedia" />
@@ -429,5 +442,19 @@ function tle_wemedia_options(){
 		</p>
 	</div>
 	<?php
+}
+
+function WeMediaCurPageURL(){
+	$pageURL = 'http';
+	if ($_SERVER["HTTPS"] == "on"){
+		$pageURL .= "s";
+	}
+	$pageURL .= "://";
+	if ($_SERVER["SERVER_PORT"] != "80"){
+		$pageURL .= $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"] . $_SERVER["REQUEST_URI"];
+	}else{
+		$pageURL .= $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
+	}
+	return $pageURL;
 }
 ?>

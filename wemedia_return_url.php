@@ -39,7 +39,18 @@ switch($wemedia_configs["wemedia_paytype"]){
 		}
 		break;
 	case "payjs":
-		
+		$out_trade_no = isset($_GET['id']) ? addslashes($_GET['id']) : 0;
+		$url = isset($_GET['url']) ? addslashes(base64_decode($_GET['url'])) : "";
+		$rowItem = $wpdb->get_row( "SELECT * FROM `" . $wpdb->prefix . "wemedia_fee_item` where feeid = '".$out_trade_no."'");
+		if(@$rowItem->feestatus==1){
+			?>
+			<center><h1>付款成功<br /><a href="<?php echo $url;?>">返回</a></h1></center>
+			<?php
+		}else{
+			?>
+			<center><h1>付款失败了<br /><a href="<?php echo $url;?>">返回</a></h1></center>
+			<?php
+		}
 		break;
 }
 ?>

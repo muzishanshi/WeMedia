@@ -3,7 +3,7 @@
 
 <img src="https://ws3.sinaimg.cn/large/ecabade5ly1ftmeqo9d9pj20kk0583yj.jpg" />
 
-本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持SPay微信支付宝支付和payjs微信支付。
+本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持SPayQQ微信支付宝支付和payjs微信支付。
 
 #### 安装方法：
 第一步：下载本插件，放在 `wp-content/plugins/` 目录中（插件文件夹名必须为WeMedia）；
@@ -36,6 +36,10 @@
 Github：https://github.com/muzishanshi/WeMedia
 
 #### 更新记录：
+2019-11-02 V1.0.6
+
+	整合payjs的扫码支付和收银台支付为一体，重新适配电脑和微信端支付情况。
+
 2019-10-02 V1.0.5
 
 	修复因加载cloudflare的layer.js失效导致的bug（因已恢复就还在沿用layer.js）。
