@@ -181,7 +181,7 @@ function tle_wemedia_setcookie() {
 		setcookie("TleWemediaPayCookie",$randomCode, time()+3600*24*$cookietime, COOKIEPATH, COOKIE_DOMAIN, false);
 	}
 }
-add_action( 'init', 'tle_wemedia_setcookie');
+//add_action( 'init', 'tle_wemedia_setcookie');
 
 /*前台显示付费*/
 add_filter('the_content', 'tle_wemedia_content');
@@ -194,6 +194,7 @@ function tle_wemedia_content($content){
 			$cookietime=$wemedia_configs["wemedia_cookietime"]==""?1:$wemedia_configs["wemedia_cookietime"];
 			$randomCode=randomCode(10,1)[1];
 			$TleWemediaPayCookie=$randomCode;
+			setcookie("TleWemediaPayCookie",$randomCode, time()+3600*24*$cookietime, COOKIEPATH, COOKIE_DOMAIN, false);
 		}else{
 			$TleWemediaPayCookie=$_COOKIE["TleWemediaPayCookie"];
 		}
