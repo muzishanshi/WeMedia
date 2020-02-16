@@ -194,7 +194,7 @@ function tle_wemedia_content($content){
 			$cookietime=$wemedia_configs["wemedia_cookietime"]==""?1:$wemedia_configs["wemedia_cookietime"];
 			$randomCode=randomCode(10,1)[1];
 			$TleWemediaPayCookie=$randomCode;
-			setcookie("TleWemediaPayCookie",$randomCode, time()+3600*24*$cookietime, COOKIEPATH, COOKIE_DOMAIN, false);
+			//setcookie("TleWemediaPayCookie",$randomCode, time()+3600*24*$cookietime, COOKIEPATH, COOKIE_DOMAIN, false);
 		}else{
 			$TleWemediaPayCookie=$_COOKIE["TleWemediaPayCookie"];
 		}
@@ -375,8 +375,8 @@ function tle_wemedia_options(){
 			</p>
 			<p>
 				支付渠道(配置二选一)：
-				<input type="radio" name="wemedia_paytype" value="spay" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="spay"?"checked":""):"checked";?> />spay微信+支付宝支付
-				<input type="radio" name="wemedia_paytype" value="payjs" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="payjs"?"checked":""):"";?> />payjs微信支付
+				<input type="radio" name="wemedia_paytype" value="spay" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="spay"?"checked":""):"checked";?> />spay微信+支付宝支付（已放弃，不确定还能不能用）
+				<input type="radio" name="wemedia_paytype" value="payjs" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="payjs"?"checked":""):"";?> />payjs微信支付（推荐）
 			</p>
 			<p>
 				<input type="number" id="wemedia_cookietime" name="wemedia_cookietime" placeholder="免登录Cookie时间(天)" value="<?=$wemedia_configs['wemedia_cookietime']!=""?$wemedia_configs['wemedia_cookietime']:1;?>" />
@@ -436,7 +436,7 @@ function tle_wemedia_options(){
 		</p>
 		<h2>使用方法</h2>
 		<p>
-			1、新建模板为“付费阅读同步回调”和“付费阅读异步回调”的页面；<br />
+			1、使用spay支付时新建模板为“付费阅读同步回调”和“付费阅读异步回调”的页面；<br />
 			2、配置以上参数；<br />
 			3、在文章中点击右侧付费阅读框插入付费阅读标签 &lt;!--WeMedia start--> &lt;!--WeMedia end--> ，并在标签中间加入付费内容，这里需要注意：WP5.0版本以上需要在编辑器经典模式下进行，插入标签后可以在html模式下查看到，在标签中间添加完付费内容后，可以返回经典编辑器视图模式；<br />
 			4、在文章列表处修改每篇的付费内容的单价，即可进行付费操作。
