@@ -181,7 +181,7 @@ function tle_wemedia_setcookie() {
 		setcookie("TleWemediaPayCookie",$randomCode, time()+3600*24*$cookietime, COOKIEPATH, COOKIE_DOMAIN, false);
 	}
 }
-//add_action( 'init', 'tle_wemedia_setcookie');
+add_action( 'init', 'tle_wemedia_setcookie');
 
 /*前台显示付费*/
 add_filter('the_content', 'tle_wemedia_content');
