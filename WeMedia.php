@@ -2,17 +2,17 @@
 /*
 Plugin Name: WeMedia付费阅读
 Plugin URI: https://github.com/muzishanshi/WeMedia
-Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持SPay支付宝、QQ、微信支付和payjs微信支付。
-Version: 1.0.6
+Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持payjs微信支付。
+Version: 1.0.7
 Author: 二呆
 Author URI: https://www.tongleer.com/
 Note: 请勿修改或删除以上信息
 */
-define("TLE_WEMEDIA_VERSION",6);
+define("TLE_WEMEDIA_VERSION",7);
 if(isset($_GET['t'])){
 	/*设置参数*/
     if($_GET['t'] == 'configwemedia'){
-        update_option('tle_wemedia', array('isEnableJQuery' => $_REQUEST['isEnableJQuery'], 'wemedia_isdrop' => $_REQUEST['wemedia_isdrop'], 'wemedia_paytype' => $_REQUEST['wemedia_paytype'], 'wemedia_cookietime' => $_REQUEST['wemedia_cookietime'], 'spay_wxpay_id' => $_REQUEST['spay_wxpay_id'], 'spay_wxpay_key' => $_REQUEST['spay_wxpay_key'], 'spay_alipay_id' => $_REQUEST['spay_alipay_id'], 'spay_alipay_key' => $_REQUEST['spay_alipay_key'], 'spay_pay_notify_url' => $_REQUEST['spay_pay_notify_url'], 'spay_pay_return_url' => $_REQUEST['spay_pay_return_url'], 'payjs_wxpay_mchid' => $_REQUEST['payjs_wxpay_mchid'], 'payjs_wxpay_key' => $_REQUEST['payjs_wxpay_key'], 'payjs_wxpay_notify_url' => $_REQUEST['payjs_wxpay_notify_url'], 'payjs_wxpay_return_url' => $_REQUEST['payjs_wxpay_return_url']));
+        update_option('tle_wemedia', array('wemedia_ad_return' => $_REQUEST['wemedia_ad_return'],'wemedia_default_price' => $_REQUEST['wemedia_default_price'],'wemedia_default_title' => $_REQUEST['wemedia_default_title'],'wemedia_mailsmtp' => $_REQUEST['wemedia_mailsmtp'],'wemedia_mailport' => $_REQUEST['wemedia_mailport'],'wemedia_mailuser' => $_REQUEST['wemedia_mailuser'],'wemedia_mailpass' => $_REQUEST['wemedia_mailpass'],'wemedia_mailsecure' => $_REQUEST['wemedia_mailsecure'],'wemedia_itemtype' => $_REQUEST['wemedia_itemtype'], 'isEnableJQuery' => $_REQUEST['isEnableJQuery'], 'wemedia_isdrop' => $_REQUEST['wemedia_isdrop'], 'wemedia_paytype' => $_REQUEST['wemedia_paytype'], 'wemedia_cookietime' => $_REQUEST['wemedia_cookietime'], 'spay_wxpay_id' => $_REQUEST['spay_wxpay_id'], 'spay_wxpay_key' => $_REQUEST['spay_wxpay_key'], 'spay_alipay_id' => $_REQUEST['spay_alipay_id'], 'spay_alipay_key' => $_REQUEST['spay_alipay_key'], 'spay_pay_notify_url' => $_REQUEST['spay_pay_notify_url'], 'spay_pay_return_url' => $_REQUEST['spay_pay_return_url'], 'payjs_wxpay_mchid' => $_REQUEST['payjs_wxpay_mchid'], 'payjs_wxpay_key' => $_REQUEST['payjs_wxpay_key'], 'payjs_wxpay_notify_url' => $_REQUEST['payjs_wxpay_notify_url'], 'payjs_wxpay_return_url' => $_REQUEST['payjs_wxpay_return_url']));
     }
 	/*设置付费单价*/
 	if($_GET['t']=='updateprice'){
@@ -40,6 +40,8 @@ register_deactivation_hook( __FILE__, 'wemedia_remove' );
 function wemedia_install() {   
 	global $wpdb;
 	createTableWemediaFeeItem($wpdb);
+	alterColumnWemediaFeeItem($wpdb,DB_NAME,$wpdb->prefix.'wemedia_fee_item','feeitemtype','varchar(11) DEFAULT NULL COMMENT "保存订单类型：默认空为cookie；mail为邮箱保存。"');
+	alterColumnWemediaFeeItem($wpdb,DB_NAME,$wpdb->prefix.'wemedia_fee_item','feemail','varchar(64) DEFAULT NULL COMMENT "付款邮箱"');
 	funWriteThemePage($wpdb,"wemedia_notify_url.php");
 	funWriteThemePage($wpdb,"wemedia_return_url.php");
 }
@@ -64,6 +66,13 @@ function createTableWemediaFeeItem($wpdb) {
 	  `feecookie` varchar(255) DEFAULT NULL,
 	  PRIMARY KEY (`feeid`)
 	) DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;');
+}
+/*修改数据表字段*/
+function alterColumnWemediaFeeItem($wpdb,$dbname,$table,$column,$define){
+	$row = $wpdb->get_row("select * from information_schema.columns WHERE TABLE_SCHEMA='".$dbname."' and table_name = '".$table."' AND column_name = '".$column."'");
+	if(empty($row)){
+		$wpdb->query('ALTER TABLE `'.$table.'` ADD COLUMN `'.$column.'` '.$define.';');
+	}
 }
 function dropTableWemediaFeeItem($wpdb) {
 	$wpdb->query('drop table if exists `'.$wpdb->prefix.'wemedia_fee_item`;');
@@ -106,7 +115,7 @@ function tle_wemedia_render_post_columns($column_name, $id) {
     switch ($column_name) {
     case 'wemedia_price_name':
 		echo '
-		<input class="tle_wemedia_id" id="tle_wemedia_id'.$id.'" data-id="'.$id.'" data-nonce="'.wp_create_nonce( 'tle-wemedia-post' ).'" type="text" value="'.get_post_meta( $id, 'tle_wemedia_submit', TRUE).'" />
+		<input class="tle_wemedia_id" id="tle_wemedia_id'.$id.'" data-id="'.$id.'" data-nonce="'.wp_create_nonce( 'tle-wemedia-post' ).'" type="text" value="'.get_post_meta( $id, 'tle_wemedia_submit', TRUE).'" size="8" maxLength="8" />
 	  ';
 		break;
     }
@@ -165,7 +174,7 @@ function tle_wemedia_add_link( $actions, $plugin_file ) {
   if (!isset($plugin))
     $plugin = plugin_basename(__FILE__);
   if ($plugin == $plugin_file) {
-      $settings = array('settings' => '<a href="admin.php?page=tle-wemedia">' . __('Settings') . '</a>');
+      $settings = array('settings' => '<a href="admin.php?page=tle-wemedia-set">' . __('Settings') . '</a>');
       $site_link  = array('version'=>'<span id="versionCode" data-code="'.TLE_WEMEDIA_VERSION.'"></span>','contact' => '<a href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=diamond0422@qq.com" target="_blank">反馈</a>','support' => '<a href="https://www.tongleer.com/api/web/pay.png" target="_blank">打赏</a>','club' => '<a href="http://club.tongleer.com" target="_blank">论坛</a>');
       $actions  = array_merge($settings, $actions);
       $actions  = array_merge($site_link, $actions);
@@ -188,18 +197,45 @@ add_filter('the_content', 'tle_wemedia_content');
 function tle_wemedia_content($content){
 	global $wpdb;
 	$wemedia_configs = get_settings('tle_wemedia');
-	$wemedia_price=get_post_meta( get_the_ID(), 'tle_wemedia_submit', TRUE);
-	if (preg_match_all('/<!--WeMedia start-->([\s\S]*?)<!--WeMedia end-->/i', $content, $hide_content)&&$wemedia_price){
-		if(!isset($_COOKIE["TleWemediaPayCookie"])){
-			$cookietime=$wemedia_configs["wemedia_cookietime"]==""?1:$wemedia_configs["wemedia_cookietime"];
-			$randomCode=randomCode(10,1)[1];
-			$TleWemediaPayCookie=$randomCode;
-			//setcookie("TleWemediaPayCookie",$randomCode, time()+3600*24*$cookietime, COOKIEPATH, COOKIE_DOMAIN, false);
+	$wemedia_price=get_post_meta( get_the_ID(), 'tle_wemedia_submit', TRUE)?get_post_meta( get_the_ID(), 'tle_wemedia_submit', TRUE):($wemedia_configs["wemedia_default_price"]?$wemedia_configs["wemedia_default_price"]:0);
+	if (preg_match_all('/<!--WeMedia start-->([\s\S]*?)<!--WeMedia end-->/i', $content, $matches)){
+		$hide_content=$matches;
+	}else if(preg_match_all('/\[WeMedia\]([\s\S]*?)\[\/WeMedia\]/i', $content, $matches)){
+		$hide_content=$matches;
+	}else{
+		$hide_content="";
+	}
+	if($hide_content){
+		if (is_single()) {
+			$html = preg_replace('/<!--WeMedia start-->([\s\S]*?)<!--WeMedia end-->/i', '<div style="border:1px dashed #F60; padding:10px; margin:10px 0; line-height:200%;  background-color:#FFF4FF; overflow:hidden; clear:both;">'.($wemedia_price?'<font color="red">本部分为付费内容，您已获得阅读权限</font><br />':'').'$1</div>', $content);
+			$html = preg_replace('/\[WeMedia\]([\s\S]*?)\[\/WeMedia\]/i', '<div style="border:1px dashed #F60; padding:10px; margin:10px 0; line-height:200%;  background-color:#FFF4FF; overflow:hidden; clear:both;">'.($wemedia_price?'<font color="red">本部分为付费内容，您已获得阅读权限</font><br />':'').'$1</div>', $html);
 		}else{
-			$TleWemediaPayCookie=$_COOKIE["TleWemediaPayCookie"];
+			$html = str_replace($hide_content[0], '<div style="border:1px dashed #F60; padding:10px; margin:10px 0; line-height:200%;  background-color:#FFF4FF; overflow:hidden; clear:both;">'.($wemedia_price?'<font color="red">本部分为付费内容，您已获得阅读权限</font><br />':'').'</div>', $content);
 		}
-		$rowFeeItem = $wpdb->get_row( "SELECT * FROM `" . $wpdb->prefix . "wemedia_fee_item` where feecookie='".$TleWemediaPayCookie."' AND feestatus = 1 AND feecid = ".get_the_ID());
-		if(!$rowFeeItem){
+	}
+	if (!current_user_can('edit_post', $post->ID)&&$hide_content&&$wemedia_price){
+		$isPay=false;
+		if($wemedia_configs["wemedia_itemtype"]==""){
+			if(!isset($_COOKIE["TleWemediaPayCookie"])){
+				$randomCode=randomCode(10,1)[1];
+				$TleWemediaPayCookie=$randomCode;
+			}else{
+				$TleWemediaPayCookie=$_COOKIE["TleWemediaPayCookie"];
+			}
+			$feeItemForCookie = $wpdb->get_row( "SELECT * FROM `" . $wpdb->prefix . "wemedia_fee_item` where feecookie='".$TleWemediaPayCookie."' AND feestatus = 1 AND feecid = ".get_the_ID());
+			if($feeItemForCookie){
+				$isPay=true;
+			}
+		}else if($wemedia_configs["wemedia_itemtype"]=="mail"){
+			$TleWemediaPayMail = isset($_GET['TleWemediaPayMail']) ? addslashes(trim($_GET['TleWemediaPayMail'])) : '';
+			if($TleWemediaPayMail){
+				$feeItemForMail = $wpdb->get_row( "SELECT * FROM `" . $wpdb->prefix . "wemedia_fee_item` where feestatus = 1 AND feecid = ".get_the_ID()." AND feemail='".$TleWemediaPayMail."'");
+				if($feeItemForMail){
+					$isPay=true;
+				}
+			}
+		}
+		if(!$isPay){
 			if($wemedia_configs["wemedia_paytype"]=="spay"){
 				$wemedia_paytype='
 					<option value="wx">微信支付</option>
@@ -214,93 +250,161 @@ function tle_wemedia_content($content){
 					<option value="wx">微信支付</option>
 				';
 			}
-			$hide_notice='
-				<div style="border:1px dashed #F60; padding:10px; margin:10px 0; line-height:200%; color:#F00; background-color:#FFF4FF; overflow:hidden; clear:both;">
-					<span style="font-size:18px;">此处内容已经被作者隐藏，请付费后刷新页面查看内容</span>
-					<form id="wemediaPayPost" method="post" style="margin:10px 0;" action="'.plugins_url().'/WeMedia/pay.php" target="_blank">
-						<span class="yzts" style="font-size:18px;float:left;">方式：</span>
-						<select id="feetype" name="feetype" style="border:none;float:left;width:160px; height:32px; line-height:30px; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;">
-							'.$wemedia_paytype.'
-						</select>
-						<div style="clear:left;"></div>
-						<span class="yzts" style="font-size:18px;float:left;">价格：</span>
-						<div style="border:none;float:left;width:80px; height:32px; line-height:30px; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;">'.$wemedia_price.'</div>
-						<input id="verifybtn" style="border:none;float:left;width:80px; height:32px; line-height:32px; padding:0 5px; background-color:#F60; text-align:center; border:none; cursor:pointer; color:#FFF;-moz-border-radius: 0px; font-size:14px;  -webkit-border-radius: 0px;  border-radius:0px;" name="" type="submit" value="付款" />
-						<input type="hidden" name="action" value="paysubmit" />
-						<input type="hidden" id="feecid" name="feecid" value="'.urlencode(get_the_ID()).'" />
-						<input type="hidden" id="feepermalink" name="feepermalink" value="'.WeMediaCurPageURL().'" />
-						<input type="hidden" id="feecookie" name="feecookie" value="'.$TleWemediaPayCookie.'" />
-					</form>
-					<div style="clear:left;"></div>
-					<span style="color:#00BF30">点击付款支付后'.$wemedia_configs["wemedia_cookietime"].'天内即可阅读隐藏内容。</span><div class="cl"></div>
-				</div>
-			';
-			$content = str_replace($hide_content[0], $hide_notice, $content);
+			foreach ($hide_content[0] as $k => $m) {
+				if (is_single()) {
+					if ($k == 0) {
+						$hide_notice='
+							<div class="wemedia-box wemedia-center">
+								<!--<div class="wemedia-mask"></div>-->
+								<div class="wemedia-lock"><span class="icon-lock-m"></span></div>
+								<div style="border:1px dashed #F60; padding:10px; margin:10px 0; line-height:200%; color:#F00; background-color:#FFF4FF; overflow:hidden; clear:both;">
+									<span style="font-size:18px;">'.($wemedia_configs["wemedia_default_title"]?$wemedia_configs["wemedia_default_title"]:"此处内容已经被作者隐藏，请付费后刷新页面查看内容").'</span>
+									<form id="wemediaPayPost" method="post" style="margin:10px 0;" action="'.plugins_url().'/WeMedia/pay.php" target="_blank">
+										<span class="yzts" style="font-size:18px;float:left;"></span>
+										<select id="feetype" name="feetype" style="border:none;width:160px; height:32px; line-height:30px; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;">
+											'.$wemedia_paytype.'
+										</select>
+										<div style="clear:left;"></div>
+										<span class="yzts" style="font-size:18px;float:left;"></span>
+										<div style="width:160px; height:32px; line-height:30px;margin:0 auto; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;">￥'.$wemedia_price.'</div>
+										'.($wemedia_configs["wemedia_itemtype"]==""?'':'<input style="border:none;width:160px; height:32px; line-height:30px; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;" type="email" id="feemail" name="feemail" placeholder="输入个人邮箱" />').'
+										<div style="clear:left;"></div>
+										<input id="verifybtn" style="border:none;width:160px; height:32px; line-height:32px; padding:0 5px; background-color:#F60; text-align:center; border:none; cursor:pointer; color:#FFF;-moz-border-radius: 0px; font-size:14px;  -webkit-border-radius: 0px;  border-radius:0px;" name="" type="submit" value="付款" />
+										<input type="hidden" name="action" value="paysubmit" />
+										<input type="hidden" id="feecid" name="feecid" value="'.urlencode(get_the_ID()).'" />
+										<input type="hidden" id="feepermalink" name="feepermalink" value="'.WeMediaCurPageURL().'" />
+										<input type="hidden" id="feecookie" name="feecookie" value="'.$TleWemediaPayCookie.'" />
+									</form>
+									<div style="clear:left;"></div>
+									'.($wemedia_configs["wemedia_itemtype"]==""?'<span style="color:#00BF30">点击付款支付后'.$wemedia_configs["wemedia_cookietime"].'天内即可阅读隐藏内容。</span>':'<a style="color:#00BF30" id="wemediaPayQuery" href=":;" onClick="return false;">已付款？点击查看(可能会有几秒延迟)</a>').'
+									<div class="cl"></div>
+									<div style="display:none;" id="wemedia_itemtype">'.$wemedia_configs["wemedia_itemtype"].'</div>
+								</div>
+							</div>
+						';
+					}else{
+						$hide_notice='
+							<div class="wemedia-box wemedia-center">
+								<div style="border:1px dashed #F60; padding:10px; margin:10px 0; line-height:200%; color:#F00; background-color:#FFF4FF; overflow:hidden; clear:both;">
+									<span style="font-size:18px;">'.($wemedia_configs["wemedia_default_title"]?$wemedia_configs["wemedia_default_title"]:"此处内容已经被作者隐藏，请付费后刷新页面查看内容").'</span>
+								</div>
+							</div>
+						';
+					}
+				}else{
+					$hide_notice="【".($wemedia_configs["wemedia_default_title"]?$wemedia_configs["wemedia_default_title"]:"此处内容已经被作者隐藏，请付费后刷新页面查看内容")."】";
+				}
+				$content = str_replace_once_for_wemedia($m, $hide_notice, $content);
+			}
 		}else{
-			$content = str_replace($hide_content[0], '<div style="border:1px dashed #F60; padding:10px; margin:10px 0; line-height:200%;  background-color:#FFF4FF; overflow:hidden; clear:both;">'.$hide_content[1][0].'</div>', $content);
+			$content = $html;
+		}
+	}else{
+		if($hide_content){
+			$content = $html;
+		}else{
+			$content=str_replace("[WeMedia]","",$content);
+			$content=str_replace("[/WeMedia]","",$content);
 		}
 	}
 	return $content;
 }
+add_action('wp_head', 'tle_wemedia_wp_header');
+function tle_wemedia_wp_header(){
+	include "assets/css/wemedia.min.css.php";
+}
 add_action('wp_footer', 'tle_wemedia_wp_footer');
 function tle_wemedia_wp_footer(){
 	$wemedia_configs = get_settings('tle_wemedia');
-	$wemedia_price=get_post_meta( get_the_ID(), 'tle_wemedia_submit', TRUE);
+	$wemedia_price=get_post_meta( get_the_ID(), 'tle_wemedia_submit', TRUE)?get_post_meta( get_the_ID(), 'tle_wemedia_submit', TRUE):($wemedia_configs["wemedia_default_price"]?$wemedia_configs["wemedia_default_price"]:0);
 	?>
 	<?php if(@$wemedia_configs['isEnableJQuery']=="y"){?>
 	<script src="https://libs.baidu.com/jquery/1.11.1/jquery.min.js"></script>
 	<?php }?>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/layer/2.3/layer.js"></script>
+	<script src="https://www.tongleer.com/cdn/layui/layui.js"></script>
+	<script type='text/javascript' src="<?php echo plugins_url(); ?>/WeMedia/assets/js/jquery.cookie.js"></script>
 	<script>
-		$("#wemediaPayPost").submit(function(){
-			var str = "确认要花费￥<?=$wemedia_price;?>购买吗？";
-			layer.confirm(str, {
-				btn: ["付款","算了"]
-			}, function(){
-				var ii = layer.load(2, {shade:[0.1,"#fff"]});
-				var wemedia_payjstype="native";
-				if(isWemediaWeiXin()){
-					wemedia_payjstype="cashier";
+		layui.use("layer", function(){
+			var $ = layui.jquery, layer = layui.layer;
+			$("#wemediaPayQuery").click(function(){
+				if($("#feemail").val()==""){
+					layer.msg("必须要输入个人邮箱");
+					return;
 				}
 				$.ajax({
 					type : "POST",
-					url : "<?=plugins_url();?>/WeMedia/pay.php",
-					data : {"action":"paysubmit","wemedia_payjstype":wemedia_payjstype,"feepermalink":$("#feepermalink").val(),"feetype":$("#feetype").val(),"feecid":$("#feecid").val(),"feecookie":$("#feecookie").val()},
-					dataType : "json",
+					url : "<?php echo plugins_url(); ?>/WeMedia/pay.php",
+					data : {action:"wemediaPayQuery",feemail:$("#feemail").val(),feecid:$("#feecid").val()},
+					dataType : "text",
 					success : function(data) {
-						layer.close(ii);
-						if(data.status=="ok"){
-							if(data.type=="spay"){
-								if(data.channel=="wx"){
-									str='<center><div>支持微信付款</div><div><img src="https://www.tongleer.com/api/web/?action=qrcode&url='+data.qrcode+'" width="200" /></div><div><a href="'+data.qrcode+'" target="_blank">跳转支付链接</a></div></center>';
-								}else if(data.channel=="alipay"){
-									str='<center><div>支持支付宝付款</div><div><a href="'+data.qrcode+'" target="_blank">跳转支付链接</a></div></center>';
-								}
-								
-							}else if(data.type=="native"){
-								str='<center><div>支持微信付款</div><div><img src="'+data.qrcode+'" width="200" /></div></center>';
-							}else if(data.type=="cashier"){
-								open("<?=plugins_url();?>/WeMedia/pay.php?wemedia_payjstype="+wemedia_payjstype+"&feepermalink="+$("#feepermalink").val()+"&feetype="+$("#feetype").val()+"&feecid="+$("#feecid").val()+"&feeuid="+$("#feeuid").val()+"&feecookie="+$("#feecookie").val());
-								return false;
-							}
+						var data=JSON.parse(data);
+						if(data.code==0){
+							location.href="<?=WeMediaCurPageURL().(strpos(WeMediaCurPageURL(),"?")?"&":"?")."TleWemediaPayMail=";?>"+$("#feemail").val();
 						}else{
-							str="<center><div>请求支付过程出了一点小问题，稍后重试一次吧！</div></center>";
+							layer.msg("您还没有付费，请付费后查看。");
 						}
-						layer.confirm(str, {
-							btn: ["已付款","算了"]
-						},function(index){
-							window.location.reload();
-							layer.close(index);
-						});
-					},error:function(data){
-						layer.close(ii);
-						layer.msg("服务器错误");
-						return false;
 					}
 				});
 			});
-			return false;
+			$("#wemediaPayPost").submit(function(){
+				var str = "确认要花费￥<?=$wemedia_price;?>购买吗？";
+				if($("#wemedia_itemtype").text()=="mail"){
+					if($("#feemail").val()==""){
+						layer.msg("必须要输入个人邮箱");
+						return false;
+					}
+					str += "<input style=\"border:none;float:left;width:80%; height:32px; line-height:30px; padding:0 5px; border:1px solid #DDD;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;\" type=\"text\" id=\"feemailcode\" name=\"feemailcode\" placeholder=\"邮箱验证码\" /><input style=\"border:none;float:left;width:20%;height:32px; line-height:32px; padding:0 5px; background-color:#DDD; text-align:center; border:none; cursor:pointer; color:#222;-moz-border-radius: 0px; font-size:14px;  -webkit-border-radius: 0px;  border-radius:0px;\" type=\"button\" id=\"btnSendCode\" value=\"发送\" /><script>$(\"#feemailcode\").focus();if($.cookie(\"mailCodeCookie\")){var count=$.cookie(\"mailCodeCookie\");$(\"#btnSendCode\").attr(\"disabled\",true);$(\"#btnSendCode\").val(count+\"秒\");var resend = setInterval(function(){count--;if (count > 0){$(\"#btnSendCode\").val(count+\"秒\");$.cookie(\"mailCodeCookie\", count, {path: \"/\", expires: (1/86400)*count});}else {$(\"#btnSendCode\").attr(\"disabled\", false);clearInterval(resend);$(\"#btnSendCode\").val(\"发送\");}}, 1000);}$(\"#btnSendCode\").click(function(){if($(\"#btnSendCode\").val()!=\"发送\"){return;}$(\"#btnSendCode\").val(\"发送中...\");$.post(\"<?php echo plugins_url(); ?>/WeMedia/pay.php\",{action:\"sendMailCode\",feemail:$(\"#feemail\").val()},function(data){var data=JSON.parse(data);if(data.code==0){alert(data.msg);var count = 60; var inl = setInterval(function () {$(\"#btnSendCode\").attr(\"disabled\", true); count -= 1; var text = count + \" 秒\";$.cookie(\"mailCodeCookie\", count, {path: \"/\", expires: (1/86400)*count}); $(\"#btnSendCode\").val(text); if (count <= 0) {clearInterval(inl); $(\"#btnSendCode\").attr(\"disabled\", false); $(\"#btnSendCode\").val(\"发送\"); }}, 1000);}else{alert(data.msg);}});});<\/script>";
+				}
+				
+				layer.confirm(str, {
+					btn: ["付款","算了"]
+				}, function(){
+					var ii = layer.load(2, {shade:[0.1,"#fff"]});
+					var wemedia_payjstype="native";
+					if(isWemediaWeiXin()){
+						wemedia_payjstype="cashier";
+					}
+					$.ajax({
+						type : "POST",
+						url : "<?=plugins_url();?>/WeMedia/pay.php",
+						data : {"action":"paysubmit","wemedia_payjstype":wemedia_payjstype,"feepermalink":$("#feepermalink").val(),"feetype":$("#feetype").val(),"feecid":$("#feecid").val(),"feecookie":$("#feecookie").val(),feemail:$("#feemail").val(),feemailcode:$("#feemailcode").val()},
+						dataType : "json",
+						success : function(data) {
+							layer.close(ii);
+							if(data.status=="ok"){
+								if(data.type=="spay"){
+									if(data.channel=="wx"){
+										str='<center><div>支持微信付款</div><div><img src="https://www.tongleer.com/api/web/?action=qrcode&url='+data.qrcode+'" width="200" /></div><div><a href="'+data.qrcode+'" target="_blank">跳转支付链接</a></div></center>';
+									}else if(data.channel=="alipay"){
+										str='<center><div>支持支付宝付款</div><div><a href="'+data.qrcode+'" target="_blank">跳转支付链接</a></div></center>';
+									}
+									
+								}else if(data.type=="native"){
+									str='<center><div>支持微信付款</div><div><img src="'+data.qrcode+'" width="200" /></div></center>';
+								}else if(data.type=="cashier"){
+									open("<?=plugins_url();?>/WeMedia/pay.php?wemedia_payjstype="+wemedia_payjstype+"&feepermalink="+$("#feepermalink").val()+"&feetype="+$("#feetype").val()+"&feecid="+$("#feecid").val()+"&feeuid="+$("#feeuid").val()+"&feecookie="+$("#feecookie").val()+"&feemail="+$("#feemail").val()+"&feemailcode="+$("#feemailcode").val());
+									return false;
+								}
+								layer.confirm(str, {
+									btn: ["已付款","算了"]
+								},function(index){
+									window.location.reload();
+									layer.close(index);
+								});
+							}else{
+								alert(data.msg);
+							}
+						},error:function(data){
+							layer.close(ii);
+							layer.msg("服务器错误");
+							return false;
+						}
+					});
+				});
+				return false;
+			});
 		});
+		
 		function isWemediaWeiXin(){
 			var ua = window.navigator.userAgent.toLowerCase();
 			if(ua.match(/MicroMessenger/i) == "micromessenger"){
@@ -346,103 +450,27 @@ function tle_wemedia_html(){
    <div onClick="insertWemedia();" style="width:auto;height:20px;border:3px dashed silver;line-height:20px; text-align:center; font-size:20px; color:#d3d3d3;cursor:pointer;">插入付费阅读标签</div>
    <script>
    function insertWemedia(){
-	tinyMCE.activeEditor.execCommand('mceInsertContent', 0, '\r\n<!--WeMedia start-->\r\n\r\n<!--WeMedia end-->');
+	tinyMCE.activeEditor.execCommand('mceInsertContent', 0, '\r\n[WeMedia]\r\n\r\n[/WeMedia]');
    }
    </script>
    <?php
 }
 
-/*设置插件参数*/
-add_action('admin_menu', 'tle_wemedia_menu');
+//添加插件菜单到后台侧边栏主菜单（WeMedia付费阅读）
 function tle_wemedia_menu(){
-    add_options_page('付费阅读', '付费阅读', 'manage_options', 'tle-wemedia', 'tle_wemedia_options');
+  add_menu_page( 'WeMedia付费阅读', 'WeMedia付费阅读', 0, 'tle-wemedia','tle_wemedia_options_order','',15);
 }
-function tle_wemedia_options(){
-    $wemedia_configs = get_settings('tle_wemedia');
-	?>
-	<div class="wrap">
-		<h2>付费阅读设置</h2>
-		<form method="get" action="">
-			<p>
-				关于卸载：
-				<input type="radio" name="wemedia_isdrop" value="n" <?=isset($wemedia_configs['wemedia_isdrop'])?($wemedia_configs['wemedia_isdrop']=="n"?"checked":""):"checked";?> />停用插件保留订单数据表及回调模板
-				<input type="radio" name="wemedia_isdrop" value="y" <?=isset($wemedia_configs['wemedia_isdrop'])?($wemedia_configs['wemedia_isdrop']=="y"?"checked":""):"";?> />停用插件删除订单数据表及回调模板
-			</p>
-			<p>
-				前台是否加载jquery：
-				<input type="radio" name="isEnableJQuery" value="n" <?=isset($wemedia_configs['isEnableJQuery'])?($wemedia_configs['isEnableJQuery']=="n"?"checked":""):"";?> />否
-				<input type="radio" name="isEnableJQuery" value="y" <?=isset($wemedia_configs['isEnableJQuery'])?($wemedia_configs['isEnableJQuery']!="n"?"checked":""):"checked";?> />是
-			</p>
-			<p>
-				支付渠道(配置二选一)：
-				<input type="radio" name="wemedia_paytype" value="spay" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="spay"?"checked":""):"checked";?> />spay微信+支付宝支付（已放弃，不确定还能不能用）
-				<input type="radio" name="wemedia_paytype" value="payjs" <?=isset($wemedia_configs['wemedia_paytype'])?($wemedia_configs['wemedia_paytype']=="payjs"?"checked":""):"";?> />payjs微信支付（推荐）
-			</p>
-			<p>
-				<input type="number" id="wemedia_cookietime" name="wemedia_cookietime" placeholder="免登录Cookie时间(天)" value="<?=$wemedia_configs['wemedia_cookietime']!=""?$wemedia_configs['wemedia_cookietime']:1;?>" />
-				指定使用免登录付费后几天内可以查看隐藏内容，默认为1天，不会记录到买入订单中。
-			</p>
-			<p><b>spay微信+支付宝支付</b></p>
-			<p>
-				<input type="text" name="spay_wxpay_id" placeholder="SPay微信支付合作ID" value="<?=$wemedia_configs['spay_wxpay_id'];?>" />
-				SPay网站（主：http://spay.swapteam.cn/；副：http://spay.8889838.com）注册授权微信支付的合作身份者id。
-			</p>
-			<p>
-				<input type="text" name="spay_wxpay_key" placeholder="SPay微信支付安全码" value="<?=$wemedia_configs['spay_wxpay_key'];?>" />
-				SPay网站（主：http://spay.swapteam.cn/；副：http://spay.8889838.com）注册授权微信支付的安全检验码key。
-			</p>
-			<p>
-				<input type="text" name="spay_alipay_id" placeholder="SPay支付宝支付合作ID" value="<?=$wemedia_configs['spay_alipay_id'];?>" />
-				SPay网站（主：http://spay.swapteam.cn/；副：http://spay.8889838.com）注册授权支付宝支付的合作身份者id。
-			</p>
-			<p>
-				<input type="text" name="spay_alipay_key" placeholder="SPay支付宝支付安全码" value="<?=$wemedia_configs['spay_alipay_key'];?>" />
-				SPay网站（主：http://spay.swapteam.cn/；副：http://spay.8889838.com）注册授权支付宝支付的安全检验码key。
-			</p>
-			<p>
-				<input type="text" name="spay_pay_notify_url" placeholder="SPay异步回调接口" value="<?=$wemedia_configs['spay_pay_notify_url'];?>" />
-				支付完成后异步回调的接口地址，可自建模板为（付费阅读异步回调）的页面。
-			</p>
-			<p>
-				<input type="text" name="spay_pay_return_url" placeholder="SPay同步回调接口" value="<?=$wemedia_configs['spay_pay_return_url'];?>" />
-				支付完成后同步回调的接口地址，可自建模板为（付费阅读同步回调）的页面。
-			</p>
-			<p><b>payjs微信支付</b></p>
-			<p>
-				<input type="text" name="payjs_wxpay_mchid" placeholder="payjs商户号" value="<?=$wemedia_configs['payjs_wxpay_mchid'];?>" />
-				在<a href="https://payjs.cn/" target="_blank">payjs官网</a>注册的商户号。
-			</p>
-			<p>
-				<input type="text" name="payjs_wxpay_key" placeholder="payjs通信密钥" value="<?=$wemedia_configs['payjs_wxpay_key'];?>" />
-				在<a href="https://payjs.cn/" target="_blank">payjs官网</a>注册的通信密钥。
-			</p>
-			<p>
-				<input type="text" name="payjs_wxpay_notify_url" placeholder="payjs异步回调接口" value="<?php echo plugin_dir_url(__FILE__);?>wemedia_notify_url.php" readOnly />
-				支付完成后异步回调的接口地址。
-			</p>
-			<p>
-				<input type="text" name="payjs_wxpay_return_url" placeholder="payjs同步回调接口" value="<?php echo plugin_dir_url(__FILE__);?>wemedia_return_url.php" readOnly />
-				支付完成后同步回调的接口地址。
-			</p>
-			<p>
-				<input type="hidden" name="t" value="configwemedia" />
-				<input type="hidden" name="page" value="tle-wemedia" />
-				<input type="submit" value="保存配置" />
-			</p>
-		</form>
-		<h2><font color="red">特别注意</font></h2>
-		<p>
-			选择spay支付时，支付宝最低单价为0.8元。
-		</p>
-		<h2>使用方法</h2>
-		<p>
-			1、使用spay支付时新建模板为“付费阅读同步回调”和“付费阅读异步回调”的页面；<br />
-			2、配置以上参数；<br />
-			3、在文章中点击右侧付费阅读框插入付费阅读标签 &lt;!--WeMedia start--> &lt;!--WeMedia end--> ，并在标签中间加入付费内容，这里需要注意：WP5.0版本以上需要在编辑器经典模式下进行，插入标签后可以在html模式下查看到，在标签中间添加完付费内容后，可以返回经典编辑器视图模式；<br />
-			4、在文章列表处修改每篇的付费内容的单价，即可进行付费操作。
-		</p>
-	</div>
-	<?php
+function tle_wemedia_options_order(){
+	include ('wemedia_page_order.php');
+}
+add_action('admin_menu', 'tle_wemedia_menu');
+//添加插件菜单到后台侧边栏子菜单（WeMedia付费阅读-设置）
+add_action('admin_menu', 'tle_wemedia_menu_set');
+function tle_wemedia_menu_set() {
+  add_submenu_page( 'tle-wemedia', '设置', '设置', 10, 'tle-wemedia-set', 'tle_wemedia_options' );
+}
+function tle_wemedia_options() {
+	include ('wemedia_page_setting.php');
 }
 
 function WeMediaCurPageURL(){
@@ -457,5 +485,12 @@ function WeMediaCurPageURL(){
 		$pageURL .= $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
 	}
 	return $pageURL;
+}
+function str_replace_once_for_wemedia($needle, $replace, $haystack) {
+    $pos = strpos($haystack, $needle);
+    if ($pos === false) {
+        return $haystack;
+    }
+    return substr_replace($haystack, $replace, $pos, strlen($needle));
 }
 ?>
