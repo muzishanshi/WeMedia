@@ -32,7 +32,7 @@
 Github：https://github.com/muzishanshi/WeMedia
 
 #### 更新记录：
-2020-30-06 V1.0.7
+2020-03-06 V1.0.7
 
 	1、新增邮箱下订单，避免cookie带来的困扰；
 	2、新增订单列表，方便查看订单信息；
