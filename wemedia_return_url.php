@@ -41,7 +41,9 @@ switch($wemedia_configs["wemedia_paytype"]){
 	case "payjs":
 		$out_trade_no = isset($_GET['id']) ? addslashes($_GET['id']) : 0;
 		$url = isset($_GET['url']) ? addslashes(base64_decode($_GET['url'])) : "";
-		$url=$url.(strpos($url,"?")?"&":"?");
+		
+		$rowItem = $wpdb->get_row( "SELECT * FROM `" . $wpdb->prefix . "wemedia_fee_item` where feeid = '".$out_trade_no."'");
+		$url=$url.(strpos($url,"?")?"&":"?")."TleWemediaPayMail=".$rowItem->feemail;
 		?>
 		<!doctype html>
 		<html class="no-js fixed-layout">
@@ -75,7 +77,7 @@ switch($wemedia_configs["wemedia_paytype"]){
 				</center>
 			</div>
 			<script>
-			var count = 5; 
+			var count = 10; 
 			var inl = setInterval (function () {
 				count -= 1;
 				$("#countdown").html(count);
