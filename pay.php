@@ -32,13 +32,22 @@ $action = isset($_POST['action']) ? addslashes($_POST['action']) : '';
 if($action=="wemediaPayQuery"){
 	$feemail = isset($_POST['feemail']) ? addslashes(trim($_POST['feemail'])) : '';
 	$feecid = isset($_POST['feecid']) ? intval(urldecode($_POST['feecid'])) : '';
+	$feemailcode = isset($_POST['feemailcode']) ? addslashes(trim($_POST['feemailcode'])) : '';
+	$blogname=get_bloginfo('name');
+	
+	if(!isset($_SESSION[$blogname."code"])||strcasecmp($_SESSION[$blogname.'code'],$feemailcode)!=0){
+		echo jsonEncode(array("status"=>"fail","msg"=>"邮箱验证码错误"));exit;
+	}
+	if ($feemail!=$_SESSION["new".$blogname]) {
+		echo jsonEncode(array("status"=>"fail","msg"=>"填写邮箱和发送验证码的邮箱不一致"));exit;
+	}
 	
 	$feeItemForMail = $wpdb->get_row( "SELECT * FROM `" . $wpdb->prefix . "wemedia_fee_item` where feestatus = 1 AND feecid = ".$feecid." AND feemail='".$feemail."'");
 	
 	if($feeItemForMail){
-		echo jsonEncode(array("code"=>0,"msg"=>"已付款"));exit;
+		echo jsonEncode(array("status"=>"ok","msg"=>"已付款"));exit;
 	}
-	echo jsonEncode(array("code"=>-1,"msg"=>"未付款"));exit;
+	echo jsonEncode(array("status"=>"fail","msg"=>"您还没有付费，请付费后查看。"));exit;
 }else if($action=="sendMailCode"){
 	$feemail = isset($_POST['feemail']) ? addslashes(trim($_POST['feemail'])) : '';
 	$blogname=get_bloginfo('name');

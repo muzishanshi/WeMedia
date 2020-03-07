@@ -3,12 +3,12 @@
 Plugin Name: WeMedia付费阅读
 Plugin URI: https://github.com/muzishanshi/WeMedia
 Description: 本插件可以隐藏文章中的任意部分内容，当访客付费后，可查看隐藏内容，当前版本支持payjs微信支付。
-Version: 1.0.7
+Version: 1.0.8
 Author: 二呆
 Author URI: https://www.tongleer.com/
 Note: 请勿修改或删除以上信息
 */
-define("TLE_WEMEDIA_VERSION",7);
+define("TLE_WEMEDIA_VERSION",8);
 if(isset($_GET['t'])){
 	/*设置参数*/
     if($_GET['t'] == 'configwemedia'){
@@ -331,19 +331,27 @@ function tle_wemedia_wp_footer(){
 					layer.msg("必须要输入个人邮箱");
 					return;
 				}
-				$.ajax({
-					type : "POST",
-					url : "<?php echo plugins_url(); ?>/WeMedia/pay.php",
-					data : {action:"wemediaPayQuery",feemail:$("#feemail").val(),feecid:$("#feecid").val()},
-					dataType : "text",
-					success : function(data) {
-						var data=JSON.parse(data);
-						if(data.code==0){
-							location.href="<?=WeMediaCurPageURL().(strpos(WeMediaCurPageURL(),"?")?"&":"?")."TleWemediaPayMail=";?>"+$("#feemail").val();
-						}else{
-							layer.msg("您还没有付费，请付费后查看。");
+				var str = "<input style=\"border:none;float:left;width:70%; height:32px; line-height:30px; padding:0 5px; border:1px solid #DDD;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;\" type=\"text\" id=\"feemailcode\" name=\"feemailcode\" placeholder=\"邮箱验证码\" /><input style=\"border:none;float:left;width:30%;height:32px; line-height:32px; padding:0 5px; background-color:#DDD; text-align:center; border:none; cursor:pointer; color:#222;-moz-border-radius: 0px; font-size:14px;  -webkit-border-radius: 0px;  border-radius:0px;\" type=\"button\" id=\"btnSendCode\" value=\"发送\" /><script>$(\"#feemailcode\").focus();if($.cookie(\"mailCodeCookie\")){var count=$.cookie(\"mailCodeCookie\");$(\"#btnSendCode\").attr(\"disabled\",true);$(\"#btnSendCode\").val(count+\"秒\");var resend = setInterval(function(){count--;if (count > 0){$(\"#btnSendCode\").val(count+\"秒\");$.cookie(\"mailCodeCookie\", count, {path: \"/\", expires: (1/86400)*count});}else {$(\"#btnSendCode\").attr(\"disabled\", false);clearInterval(resend);$(\"#btnSendCode\").val(\"发送\");}}, 1000);}$(\"#btnSendCode\").click(function(){if($(\"#btnSendCode\").val()!=\"发送\"){return;}$(\"#btnSendCode\").val(\"发送中...\");$.post(\"<?php echo plugins_url(); ?>/WeMedia/pay.php\",{action:\"sendMailCode\",feemail:$(\"#feemail\").val()},function(data){var data=JSON.parse(data);if(data.code==0){alert(data.msg);var count = 60; var inl = setInterval(function () {$(\"#btnSendCode\").attr(\"disabled\", true); count -= 1; var text = count + \" 秒\";$.cookie(\"mailCodeCookie\", count, {path: \"/\", expires: (1/86400)*count}); $(\"#btnSendCode\").val(text); if (count <= 0) {clearInterval(inl); $(\"#btnSendCode\").attr(\"disabled\", false); $(\"#btnSendCode\").val(\"发送\"); }}, 1000);}else{alert(data.msg);}});});<\/script>";
+				layer.confirm(str, {
+					title:"验证",
+					btn: ["确定","取消"]
+				}, function(){
+					var ii = layer.load(2, {shade:[0.1,"#fff"]});
+					$.ajax({
+						type : "POST",
+						url : "<?php echo plugins_url(); ?>/WeMedia/pay.php",
+						data : {action:"wemediaPayQuery",feemail:$("#feemail").val(),feemailcode:$("#feemailcode").val(),feecid:$("#feecid").val()},
+						dataType : "text",
+						success : function(data) {
+							layer.close(ii);
+							var data=JSON.parse(data);
+							if(data.status=="ok"){
+								location.href="<?=WeMediaCurPageURL().(strpos(WeMediaCurPageURL(),"?")?"&":"?")."TleWemediaPayMail=";?>"+$("#feemail").val();
+							}else{
+								alert(data.msg);
+							}
 						}
-					}
+					});
 				});
 			});
 			$("#wemediaPayPost").submit(function(){
@@ -388,7 +396,7 @@ function tle_wemedia_wp_footer(){
 								layer.confirm(str, {
 									btn: ["已付款","算了"]
 								},function(index){
-									window.location.reload();
+									location.href="<?=WeMediaCurPageURL().(strpos(WeMediaCurPageURL(),"?")?"&":"?")."TleWemediaPayMail=";?>"+$("#feemail").val();
 									layer.close(index);
 								});
 							}else{
