@@ -258,25 +258,26 @@ function tle_wemedia_content($content){
 								<!--<div class="wemedia-mask"></div>-->
 								<div class="wemedia-lock"><span class="icon-lock-m"></span></div>
 								<div style="border:1px dashed #F60; padding:10px; margin:10px 0; line-height:200%; color:#F00; background-color:#FFF4FF; overflow:hidden; clear:both;">
-									<span style="font-size:18px;">'.($wemedia_configs["wemedia_default_title"]?$wemedia_configs["wemedia_default_title"]:"此处内容已经被作者隐藏，请付费后刷新页面查看内容").'</span>
 									<form id="wemediaPayPost" method="post" style="margin:10px 0;" action="'.plugins_url().'/WeMedia/pay.php" target="_blank">
 										<span class="yzts" style="font-size:18px;float:left;"></span>
-										<select id="feetype" name="feetype" style="border:none;width:160px; height:32px; line-height:30px; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;">
+										<span style="font-size:18px;width:30%; height:32px; line-height:30px; padding:0 5px;">'.($wemedia_configs["wemedia_default_title"]?$wemedia_configs["wemedia_default_title"]:"此处内容已经被作者隐藏，请付费后刷新页面查看内容").'</span>
+										<div style="clear:left;"></div>
+										<select id="feetype" name="feetype" style="border:none;width:30%; height:32px; line-height:30px; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;">
 											'.$wemedia_paytype.'
 										</select>
 										<div style="clear:left;"></div>
 										<span class="yzts" style="font-size:18px;float:left;"></span>
-										<div style="width:160px; height:32px; line-height:30px;margin:0 auto; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;">￥'.$wemedia_price.'</div>
-										'.($wemedia_configs["wemedia_itemtype"]==""?'':'<input style="border:none;width:160px; height:32px; line-height:30px; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;" type="email" id="feemail" name="feemail" placeholder="输入个人邮箱" />').'
+										<div style="width:30%; height:32px; line-height:30px;margin:0 auto; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;">￥'.$wemedia_price.'</div>
+										'.($wemedia_configs["wemedia_itemtype"]==""?'':'<input style="border:none;width:30%; height:32px; line-height:30px; padding:0 5px; border:1px solid #FF6600;-moz-border-radius: 0px;  -webkit-border-radius: 0px;  border-radius:0px;" type="email" id="feemail" name="feemail" placeholder="输入个人邮箱" />').'
 										<div style="clear:left;"></div>
-										<input id="verifybtn" style="border:none;width:160px; height:32px; line-height:32px; padding:0 5px; background-color:#F60; text-align:center; border:none; cursor:pointer; color:#FFF;-moz-border-radius: 0px; font-size:14px;  -webkit-border-radius: 0px;  border-radius:0px;" name="" type="submit" value="付款" />
+										<input id="verifybtn" style="border:none;width:30%; height:32px; line-height:32px; padding:0 5px; background-color:#F60; text-align:center; border:none; cursor:pointer; color:#FFF;-moz-border-radius: 0px; font-size:14px;  -webkit-border-radius: 0px;  border-radius:0px;" name="" type="submit" value="付款" />
 										<input type="hidden" name="action" value="paysubmit" />
 										<input type="hidden" id="feecid" name="feecid" value="'.urlencode(get_the_ID()).'" />
 										<input type="hidden" id="feepermalink" name="feepermalink" value="'.WeMediaCurPageURL().'" />
 										<input type="hidden" id="feecookie" name="feecookie" value="'.$TleWemediaPayCookie.'" />
 									</form>
 									<div style="clear:left;"></div>
-									'.($wemedia_configs["wemedia_itemtype"]==""?'<span style="color:#00BF30">点击付款支付后'.$wemedia_configs["wemedia_cookietime"].'天内即可阅读隐藏内容。</span>':'<a style="color:#00BF30" id="wemediaPayQuery" href=":;" onClick="return false;">已付款？点击查看(可能会有几秒延迟)</a>').'
+									'.($wemedia_configs["wemedia_itemtype"]==""?'<span style="color:#00BF30">点击付款支付后'.$wemedia_configs["wemedia_cookietime"].'天内即可阅读隐藏内容。</span>':'<a style="color:#00BF30" id="wemediaPayQuery" href="javascript:;" onClick="return false;">已付款？点击查看(可能会有几秒延迟)</a>').'
 									<div class="cl"></div>
 									<div style="display:none;" id="wemedia_itemtype">'.$wemedia_configs["wemedia_itemtype"].'</div>
 								</div>
