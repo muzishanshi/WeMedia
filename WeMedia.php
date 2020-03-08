@@ -228,7 +228,7 @@ function tle_wemedia_content($content){
 			}
 		}else if($wemedia_configs["wemedia_itemtype"]=="mail"){
 			$TleWemediaPayMail = isset($_GET['TleWemediaPayMail']) ? addslashes(trim($_GET['TleWemediaPayMail'])) : '';
-			if($TleWemediaPayMail){
+			if($TleWemediaPayMail&&$TleWemediaPayMail==$_SESSION["new".get_bloginfo('name')]){
 				$feeItemForMail = $wpdb->get_row( "SELECT * FROM `" . $wpdb->prefix . "wemedia_fee_item` where feestatus = 1 AND feecid = ".get_the_ID()." AND feemail='".$TleWemediaPayMail."'");
 				if($feeItemForMail){
 					$isPay=true;
