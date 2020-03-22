@@ -467,7 +467,7 @@ function tle_wemedia_html(){
 
 //添加插件菜单到后台侧边栏主菜单（WeMedia付费阅读）
 function tle_wemedia_menu(){
-  add_menu_page( 'WeMedia付费阅读', 'WeMedia付费阅读', 0, 'tle-wemedia','tle_wemedia_options_order','',15);
+  add_menu_page( 'WeMedia付费阅读', 'WeMedia付费阅读', 10, 'tle-wemedia','tle_wemedia_options_order','',15);
 }
 function tle_wemedia_options_order(){
 	include ('wemedia_page_order.php');
