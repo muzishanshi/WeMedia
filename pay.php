@@ -1,5 +1,5 @@
 <?php
-if(session_status() !==PHP_SESSION_ACTIVE&&session_status() !==PHP_SESSION_NONE){session_start();}
+if(!isset($_SESSION)){session_start();}
 define('PATH', dirname(__FILE__).'/');
 require_once(PATH . '../../../wp-config.php');  
 require_once PATH . 'libs/spay.php';
