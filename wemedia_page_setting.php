@@ -60,7 +60,7 @@
 		<tr class="itemtype-cookie" <?=isset($wemedia_configs['wemedia_itemtype'])?($wemedia_configs['wemedia_itemtype']=="mail"?'style="display:none;"':''):'style="display:none;"';?>>
           <th scope="row"><label for="paywall-default-amount">免登录Cookie时间(天)</label></th>
           <td>
-            <input value="<?=$wemedia_configs['wemedia_cookietime']!=""?$wemedia_configs['wemedia_cookietime']:1;?>" name="wemedia_cookietime" type="number" size="2" maxlength="2" step="1" max="9999" min="1" placeholder="免登录Cookie时间(天)">元
+            <input value="<?=$wemedia_configs['wemedia_cookietime']!=""?$wemedia_configs['wemedia_cookietime']:1;?>" name="wemedia_cookietime" type="number" size="2" maxlength="2" step="1" max="9999" min="1" placeholder="免登录Cookie时间(天)">天
             <p class="description">
               指定使用免登录付费后几天内可以查看隐藏内容，默认为1天。
             </p>
